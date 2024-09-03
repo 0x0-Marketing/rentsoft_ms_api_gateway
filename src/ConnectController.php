@@ -42,17 +42,16 @@ class ConnectController extends AbstractController
     public Explorer $articleExplorer;
     public Explorer $onlineBookingExplorer;
 
-    public function __construct(ParameterBagInterface $params)
+    public function __construct($article_host, $article_username, $article_password, $article_database, $ob_host, $ob_username, $ob_password, $ob_database)
     {
-
         $articleStorage = new MemoryStorage();
-        $articleConnection = new Connection("pgsql:host=ms-article-postgres;dbname=article", "article", "article");
+        $articleConnection = new Connection("pgsql:host=".$article_host.";dbname=".$article_database, $article_username, $article_password);
         $articleStructure = new Structure($articleConnection, $articleStorage);
         $articleConventions = new StaticConventions();
         $articleExplorer = new Explorer($articleConnection, $articleStructure, $articleConventions, $articleStorage);
 
         $onlineBookingStorage = new MemoryStorage();
-        $onlineBookingConnection = new Connection("pgsql:host=rentsoft_ms_online_booking_postgres;dbname=api", "api", "api");
+        $onlineBookingConnection = new Connection("pgsql:host=".$ob_host.";dbname=".$ob_database, $ob_username, $ob_password);
         $onlineBookingStructure = new Structure($onlineBookingConnection, $onlineBookingStorage);
         $onlineBookingConventions = new StaticConventions();
         $onlineBookingExplorer = new Explorer($onlineBookingConnection, $onlineBookingStructure, $onlineBookingConventions, $onlineBookingStorage);
