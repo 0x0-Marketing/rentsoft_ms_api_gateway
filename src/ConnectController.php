@@ -42,7 +42,7 @@ class ConnectController extends AbstractController
     public Explorer $articleExplorer;
     public Explorer $onlineBookingExplorer;
 
-    public function __construct()
+    public function __construct(ParameterBagInterface $params)
     {
 
         $articleStorage = new MemoryStorage();
