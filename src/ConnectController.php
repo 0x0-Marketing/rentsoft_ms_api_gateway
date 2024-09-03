@@ -2,27 +2,6 @@
 
 namespace Rentsoft\RentsoftMsApiGateway;
 
-use App\Controller\Model\ArticleAccessories;
-use App\Controller\Model\ArticleAttribute;
-use App\Controller\Model\ArticleBooking;
-use App\Controller\Model\ArticleFiles;
-use App\Controller\Model\ArticleGroupAccessories;
-use App\Controller\Model\ArticleGroupAttribute;
-use App\Controller\Model\ArticleGroupImage;
-use App\Controller\Model\ArticleGroupMinRental;
-use App\Controller\Model\ArticleImage;
-use App\Controller\Model\Manufacturer;
-use App\Controller\Model\OnlineBookingAppearance;
-use App\Controller\Model\OnlineBookingBlockedDay;
-use App\Controller\Model\OnlineBookingCheckout;
-use App\Controller\Model\OnlineBookingDynamicText;
-use App\Controller\Model\OnlineBookingOpenTime;
-use App\Controller\Model\PriceDeal;
-use App\Controller\Model\SettingsCategory;
-use App\Controller\Model\SettingsCountry;
-use App\Controller\Model\SettingsLocation;
-use App\Controller\Model\TagGroup;
-use App\Controller\Model\TagGroupEntry;
 use Doctrine\Common\Collections\ArrayCollection;
 use Http\Discovery\Exception\NotFoundException;
 use Nette\Database\Connection;
@@ -30,6 +9,30 @@ use Nette\Database\Conventions\StaticConventions;
 use Nette\Database\Explorer;
 use Nette\Database\Structure;
 use Nette\Caching\Storages\MemoryStorage;
+use Rentsoft\RentsoftMsApiGateway\Model\Article;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleAccessories;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleAttribute;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleBooking;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleFiles;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleGroup;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleGroupAccessories;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleGroupAttribute;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleGroupImage;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleGroupMinRental;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleImage;
+use Rentsoft\RentsoftMsApiGateway\Model\Manufacturer;
+use Rentsoft\RentsoftMsApiGateway\Model\OnlineBooking;
+use Rentsoft\RentsoftMsApiGateway\Model\OnlineBookingAppearance;
+use Rentsoft\RentsoftMsApiGateway\Model\OnlineBookingBlockedDay;
+use Rentsoft\RentsoftMsApiGateway\Model\OnlineBookingCheckout;
+use Rentsoft\RentsoftMsApiGateway\Model\OnlineBookingDynamicText;
+use Rentsoft\RentsoftMsApiGateway\Model\OnlineBookingOpenTime;
+use Rentsoft\RentsoftMsApiGateway\Model\PriceDeal;
+use Rentsoft\RentsoftMsApiGateway\Model\SettingsCategory;
+use Rentsoft\RentsoftMsApiGateway\Model\SettingsCountry;
+use Rentsoft\RentsoftMsApiGateway\Model\SettingsLocation;
+use Rentsoft\RentsoftMsApiGateway\Model\TagGroup;
+use Rentsoft\RentsoftMsApiGateway\Model\TagGroupEntry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
 use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
@@ -62,7 +65,7 @@ class ConnectController extends AbstractController
     {
         $result = $this->onlineBookingExplorer->fetch("SELECT * FROM online_booking WHERE uri = '" . $uri . "'");
 
-        $model = new \App\Controller\Model\OnlineBooking();
+        $model = new OnlineBooking();
         $model->setUri($result->uri);
         $model->setClientId($result->client_id);
         $model->setId($result->id);
@@ -168,7 +171,7 @@ class ConnectController extends AbstractController
     {
         $result = $this->articleExplorer->fetch("SELECT * FROM article_group WHERE id = '" . $id . "'");
 
-        $model = new \App\Controller\Model\ArticleGroup();
+        $model = new ArticleGroup();
         $model->setId($result->id);
         $model->setClientId($result->client_id);
         $model->setName($result->name);
@@ -305,7 +308,7 @@ class ConnectController extends AbstractController
             throw new NotFoundException("Article not found");
         }
 
-        $model = new \App\Controller\Model\Article();
+        $model = new Article();
         $model->setArticleId($result->article_id);
         $model->setId($result->id);
         $model->setClientId($result->client_id);

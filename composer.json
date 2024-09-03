@@ -1,8 +1,13 @@
 {
   "name": "rentsoft/rentsoft_ms_api_gateway",
-  "version": "1.0.6",
+  "version": "1.0.7",
   "description": "description",
   "type": "symfony-bundle",
+  "require": {
+    "php": ">=8.0",
+    "doctrine/collections": "*",
+    "nette/database": "*"
+  },
   "autoload": {
     "psr-4": {
       "Rentsoft\\RentsoftMsApiGateway\\": "src/"
