@@ -1,8 +1,8 @@
 {
     "name": "oxo_marketing/rentsoft_ms_api_gateway",
+    "version": "1.0.0",
     "description": "description",
-    "type": "library",
-    "license": "free",
+    "type": "symfony-bundle",
     "autoload": {
         "psr-4": {
             "OxoMarketing\\RentsoftMsApiGateway\\": "src/"
@@ -13,5 +13,6 @@
             "name": "Markus Kienzl"
         }
     ],
+    "minimum-stability": "stable",
     "require": {}
 }
