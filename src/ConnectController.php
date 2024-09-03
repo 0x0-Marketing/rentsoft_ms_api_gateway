@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller;
+namespace oxo_marketing\rentsoft_ms_api_gateway;
 
 use App\Controller\Model\ArticleAccessories;
 use App\Controller\Model\ArticleAttribute;
