@@ -597,7 +597,7 @@ class ConnectController extends AbstractController
             $sql_condition .= "AND article.id NOT IN (" . $sub_sql . ")";
         }
 
-        $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . " GROUP BY article.id ". $order . $limit);
+        $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . " GROUP BY article.id " . $order . $limit);
 
         $collection = new ArrayCollection();
         foreach ($results as $result) {
@@ -1237,7 +1237,7 @@ class ConnectController extends AbstractController
                     $priceConfig['calculationType'] = "per_day";
                     $priceConfig['calculationPriceType'] = "rates";
 
-                    while ($rentalStartCalculation < $rentalEndCalculation) {
+                    while ($rentalStartCalculation <= $rentalEndCalculation) {
 
                         $middleOfTheDay = new \DateTime();
                         $middleOfTheDay->setTimestamp(mktime(12, 0, 0, date("m", $rentalStartCalculation), date("d", $rentalStartCalculation), date("Y", $rentalStartCalculation)));
@@ -1260,8 +1260,6 @@ class ConnectController extends AbstractController
                                           '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
                                           price_rate_group.default_price_rate = true AND
                                           price_rate_group.name LIKE '%L P'");
-
-
                         } else {
                             $price_rate_result = $this->articleExplorer->fetch("
                                     SELECT
@@ -1283,9 +1281,15 @@ class ConnectController extends AbstractController
 
                         if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
 
-                            $listArray[date("d.m.Y", $rentalStartCalculation)] = $price_rate_result;
-                            $priceTotal += $price_rate_result->unit_price;
-                            $kmhTotal += $price_rate_result->unit_free;
+                            if (date("N", $rentalStartCalculation) != 7) {
+
+                                $listArray[date("d.m.Y", $rentalStartCalculation)] = $price_rate_result;
+                                $priceTotal += $price_rate_result->unit_price;
+                                $kmhTotal += $price_rate_result->unit_free;
+                            } else {
+                                $rentalDays['rentalDays'] --;
+                                $rentalDays['calculationDays'] --;
+                            }
                         }
 
                         $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
