@@ -734,7 +734,10 @@ class ConnectController extends AbstractController
 
     public function writeArticleBooking($client_id, $article_id, $rental_start, $rental_end, $quantity = 1)
     {
-        $this->articleExplorer->query("INSERT INTO article_bookin (article_id, client_id, booking_start, booking_end, quantity) VALUES ('" . $article_id . "', '" . $client_id . "', '" . $rental_start . "', '" . $rental_end . "', '" . $quantity . "')");
+        $now = new DateTime();
+
+        $this->articleExplorer->query("INSERT INTO article_booking (id, created_at, article_id, client_id, booking_start, booking_end, quantity) VALUES
+                                              ((SELECT MAX(id) + 1 FROM article_booking), '".$now->format("Y-m-d H:i:s")."', '" . $article_id . "', '" . $client_id . "', '" . $rental_start . "', '" .$rental_end . "', '".$quantity."')");
     }
 
     public function calculatePriceForArticleGroups(array $article_groups_id_array, int $rental_start, int $rental_end)
