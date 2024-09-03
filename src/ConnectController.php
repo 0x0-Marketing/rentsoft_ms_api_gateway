@@ -734,7 +734,7 @@ class ConnectController extends AbstractController
 
     public function writeArticleBooking($client_id, $article_id, $rental_start, $rental_end, $quantity = 1)
     {
-        $now = new DateTime();
+        $now = new \DateTime();
 
         $this->articleExplorer->query("INSERT INTO article_booking (id, created_at, article_id, client_id, booking_start, booking_end, quantity) VALUES
                                               ((SELECT MAX(id) + 1 FROM article_booking), '".$now->format("Y-m-d H:i:s")."', '" . $article_id . "', '" . $client_id . "', '" . $rental_start . "', '" .$rental_end . "', '".$quantity."')");
@@ -766,7 +766,7 @@ class ConnectController extends AbstractController
                             WHERE
                                   article_group_price_rate__list.article_group_id = " . $article_group_id . " AND
                                   price_rate_group.enabled_ms_online_booking = true AND
-                                  price_rate_group.default_price_rate = true");
+                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
                 if (sizeof($price_rate_result) > 0) {
                     $priceRateResult = $price_rate_result;
@@ -822,7 +822,7 @@ class ConnectController extends AbstractController
                                   price_rate_group.enabled_ms_online_booking = true AND
                                   price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
                                   '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
-                                  price_rate_group.default_price_rate = true");
+                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
                     if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
 
@@ -920,7 +920,7 @@ class ConnectController extends AbstractController
                             WHERE
                                   article_group_price_rate__list.article_group_id = " . $article_group_id . " AND
                                   price_rate_group.enabled_ms_online_booking = true AND
-                                  price_rate_group.default_price_rate = true");
+                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
         $response = new Response(json_encode($price_rate_result));
         $response->headers->set('Content-Type', 'application/json');
@@ -1037,7 +1037,7 @@ class ConnectController extends AbstractController
                                   price_rate_group.enabled_ms_online_booking = true AND
                                   price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
                                   '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
-                                  price_rate_group.default_price_rate = true");
+                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
                             if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
 
