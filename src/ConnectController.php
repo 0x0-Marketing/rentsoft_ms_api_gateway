@@ -39,40 +39,20 @@ class ConnectController extends AbstractController
     public Explorer $articleExplorer;
     public Explorer $onlineBookingExplorer;
 
-    public function __construct(ParameterBagInterface $params)
+    public function __construct()
     {
-        switch ($params->get('app_env')) {
-            case "dev":
 
-                $articleStorage = new MemoryStorage();
-                $articleConnection = new Connection("pgsql:host=ms-article-postgres;dbname=article", "article", "article");
-                $articleStructure = new Structure($articleConnection, $articleStorage);
-                $articleConventions = new StaticConventions();
-                $articleExplorer = new Explorer($articleConnection, $articleStructure, $articleConventions, $articleStorage);
+        $articleStorage = new MemoryStorage();
+        $articleConnection = new Connection("pgsql:host=ms-article-postgres;dbname=article", "article", "article");
+        $articleStructure = new Structure($articleConnection, $articleStorage);
+        $articleConventions = new StaticConventions();
+        $articleExplorer = new Explorer($articleConnection, $articleStructure, $articleConventions, $articleStorage);
 
-                $onlineBookingStorage = new MemoryStorage();
-                $onlineBookingConnection = new Connection("pgsql:host=rentsoft_ms_online_booking_postgres;dbname=api", "api", "api");
-                $onlineBookingStructure = new Structure($onlineBookingConnection, $onlineBookingStorage);
-                $onlineBookingConventions = new StaticConventions();
-                $onlineBookingExplorer = new Explorer($onlineBookingConnection, $onlineBookingStructure, $onlineBookingConventions, $onlineBookingStorage);
-                break;
-
-            case "prod":
-            case "stage":
-
-                $articleStorage = new MemoryStorage();
-                $articleConnection = new Connection("pgsql:host=34.159.105.242;dbname=article_api", "article_api", "o84nJJwwHJ5t7cjCa54asd54");
-                $articleStructure = new Structure($articleConnection, $articleStorage);
-                $articleConventions = new StaticConventions();
-                $articleExplorer = new Explorer($articleConnection, $articleStructure, $articleConventions, $articleStorage);
-
-                $onlineBookingStorage = new MemoryStorage();
-                $onlineBookingConnection = new Connection("pgsql:host=34.159.105.242;dbname=ob_api", "ob_api", "o84nJJwwHJ5t7cjCa54asd54");
-                $onlineBookingStructure = new Structure($onlineBookingConnection, $onlineBookingStorage);
-                $onlineBookingConventions = new StaticConventions();
-                $onlineBookingExplorer = new Explorer($onlineBookingConnection, $onlineBookingStructure, $onlineBookingConventions, $onlineBookingStorage);
-                break;
-        }
+        $onlineBookingStorage = new MemoryStorage();
+        $onlineBookingConnection = new Connection("pgsql:host=rentsoft_ms_online_booking_postgres;dbname=api", "api", "api");
+        $onlineBookingStructure = new Structure($onlineBookingConnection, $onlineBookingStorage);
+        $onlineBookingConventions = new StaticConventions();
+        $onlineBookingExplorer = new Explorer($onlineBookingConnection, $onlineBookingStructure, $onlineBookingConventions, $onlineBookingStorage);
 
         $this->onlineBookingExplorer = $onlineBookingExplorer;
         $this->articleExplorer = $articleExplorer;
@@ -1287,8 +1267,8 @@ class ConnectController extends AbstractController
                                 $priceTotal += $price_rate_result->unit_price;
                                 $kmhTotal += $price_rate_result->unit_free;
                             } else {
-                                $rentalDays['rentalDays'] --;
-                                $rentalDays['calculationDays'] --;
+                                $rentalDays['rentalDays']--;
+                                $rentalDays['calculationDays']--;
                             }
                         }
 
