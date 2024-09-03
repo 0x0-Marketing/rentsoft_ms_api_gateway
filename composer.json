@@ -1,18 +1,18 @@
 {
-    "name": "oxo_marketing/rentsoft_ms_api_gateway",
-    "version": "1.0.0",
-    "description": "description",
-    "type": "symfony-bundle",
-    "autoload": {
-        "psr-4": {
-            "OxoMarketing\\RentsoftMsApiGateway\\": "src/"
-        }
-    },
-    "authors": [
-        {
-            "name": "Markus Kienzl"
-        }
-    ],
-    "minimum-stability": "stable",
-    "require": {}
+  "name": "rentsoft/rentsoft_ms_api_gateway",
+  "version": "1.0.0",
+  "description": "description",
+  "type": "symfony-bundle",
+  "autoload": {
+    "psr-4": {
+      "Rentsoft\\RentsoftMsApiGateway\\": "src/"
+    }
+  },
+  "authors": [
+    {
+      "name": "Markus Kienzl"
+    }
+  ],
+  "minimum-stability": "stable",
+  "require": {}
 }
