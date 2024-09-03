@@ -1,4 +1,17 @@
 {
-    "name": "0x0-marketing/rentsoft_ms_api_gateway",
-    "type": "library"
+    "name": "oxo_marketing/rentsoft_ms_api_gateway",
+    "description": "description",
+    "type": "library",
+    "license": "free",
+    "autoload": {
+        "psr-4": {
+            "OxoMarketing\\RentsoftMsApiGateway\\": "src/"
+        }
+    },
+    "authors": [
+        {
+            "name": "Markus Kienzl"
+        }
+    ],
+    "require": {}
 }
