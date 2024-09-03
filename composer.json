@@ -1,6 +1,6 @@
 {
   "name": "rentsoft/rentsoft_ms_api_gateway",
-  "version": "1.0.11",
+  "version": "1.0.121.0.12",
   "description": "description",
   "type": "symfony-bundle",
   "require": {
@@ -23,5 +23,4 @@
     }
   ],
   "minimum-stability": "stable",
-  "require": {}
 }

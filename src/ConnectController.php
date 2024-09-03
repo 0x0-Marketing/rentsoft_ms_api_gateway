@@ -184,7 +184,7 @@ class ConnectController extends AbstractController
         # IMAGES
         if ($fetch_images === true) {
 
-            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_image WHERE article_group_id = '" . $result->id . "'");
+            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_image WHERE article_group_id = '" . $result->id . "' ORDER BY priority ASC");
             $image_collection = new ArrayCollection();
 
             foreach ($image_results as $image_result) {
@@ -261,7 +261,7 @@ class ConnectController extends AbstractController
         # ACCESSORIES
         if ($fetch_accessories === true) {
 
-            $accessories_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_accessories WHERE article_group_id = " . $result->id);
+            $accessories_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_accessories WHERE article_group_id = " . $result->id." ORDER BY priority ASC");
             $accessories_collection = new ArrayCollection();
 
             foreach ($accessories_results as $accessories_result) {
@@ -387,7 +387,7 @@ class ConnectController extends AbstractController
 
         # IMAGES
         if ($fetch_images === true) {
-            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM article_image WHERE article_id = '" . $result->id . "'");
+            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM article_image WHERE article_id = '" . $result->id . "' ORDER BY priority ASC ");
             $image_collection = new ArrayCollection();
 
             foreach ($image_results as $image_result) {
