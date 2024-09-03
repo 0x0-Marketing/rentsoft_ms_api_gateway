@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Controller\Model;
+namespace Rentsoft\RentsoftMsApiGateway\Model;
 
 class OnlineBookingDynamicText
 {
