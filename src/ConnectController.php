@@ -767,7 +767,7 @@ class ConnectController extends AbstractController
                                   price_rate_group.enabled_ms_online_booking = true AND
                                   price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
-                if (sizeof($price_rate_result) > 0) {
+                if ($price_rate_result !== null && sizeof($price_rate_result) > 0) {
                     $priceRateResult = $price_rate_result;
 
                     $priceConfig = [];
@@ -956,7 +956,7 @@ class ConnectController extends AbstractController
                                   price_rate_group.enabled_ms_online_booking = true AND
                                   price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
-                if (sizeof($price_rate_result) > 0) {
+                if ($price_rate_result !== null && sizeof($price_rate_result) > 0) {
                     $priceRateResult = $price_rate_result[0];
 
                     $priceConfig = [];
