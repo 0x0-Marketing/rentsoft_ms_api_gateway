@@ -762,7 +762,7 @@ class ConnectController extends AbstractController
                             FROM price_rate_entry
                             LEFT JOIN price_rate_group ON price_rate_group.id = price_rate_entry.price_rate_group_id
                             LEFT JOIN article_group_price_rate__list ON article_group_price_rate__list.group_id = price_rate_group.id
-                            LEFT JOIN article_group ON article_group.id = price_rate_group.article_group_id
+                            LEFT JOIN article_group ON article_group.id = article_group_price_rate__list.article_group_id
                             WHERE
                                   article_group_price_rate__list.article_group_id = " . $article_group_id . " AND
                                   price_rate_group.enabled_ms_online_booking = true AND
