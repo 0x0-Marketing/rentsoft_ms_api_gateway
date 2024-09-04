@@ -184,7 +184,7 @@ class ConnectController extends AbstractController
         # IMAGES
         if ($fetch_images === true) {
 
-            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_image WHERE article_group_id = '" . $result->id . "' ORDER BY priority ASC");
+            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_image WHERE article_group_id = '" . $result->id . "' ORDER BY prio ASC");
             $image_collection = new ArrayCollection();
 
             foreach ($image_results as $image_result) {
