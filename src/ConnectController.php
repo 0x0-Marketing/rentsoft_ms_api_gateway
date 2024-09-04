@@ -1179,7 +1179,6 @@ class ConnectController extends AbstractController
     {
         $returnData = [];
 
-
         foreach ($article_id_array as $article_id) {
 
             # PRICE RATES
