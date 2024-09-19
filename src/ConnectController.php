@@ -692,7 +692,7 @@ class ConnectController extends AbstractController
             $model->setPosition($result->position);
             $model->setOnlineBookingId($result->online_booking_id);
 
-            $entry_results = $this->onlineBookingExplorer->fetchAll("SELECT * FROM settings_filters_tag_group_entry WHERE settings_filters_tag_group_id = '" . $result->id . "'");
+            $entry_results = $this->onlineBookingExplorer->fetchAll("SELECT * FROM settings_filters_tag_group_entry WHERE settings_filters_tag_group_id = '" . $result->id . "' ORDER BY position ASC");
 
             foreach ($entry_results as $entry_result) {
                 $entry = new TagGroupEntry();
