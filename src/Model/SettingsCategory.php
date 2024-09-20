@@ -15,6 +15,22 @@ class SettingsCategory
     public $rgt;
     public $enable_online_booking;
     public $old_rentsoft_id;
+    public ArrayCollection $childrens;
+
+    function __construct()
+    {
+        $this->childrens = new ArrayCollection();
+    }
+
+    public function getChildrens(): ArrayCollection
+    {
+        return $this->childrens;
+    }
+
+    public function setChildrens(ArrayCollection $childrens): void
+    {
+        $this->childrens = $childrens;
+    }
 
     /**
      * @return mixed
