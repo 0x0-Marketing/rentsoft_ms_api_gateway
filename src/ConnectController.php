@@ -651,9 +651,9 @@ class ConnectController extends AbstractController
         return $model;
     }
 
-    public function getFilterCategoryTree($client_uuid)
+    public function getFilterCategoryTree($client_uuid, $type = "article")
     {
-        $results = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id IS NULL ORDER BY name ASC");
+        $results = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id IS NULL AND type = '".$type."' ORDER BY name ASC");
         $collection = new ArrayCollection();
 
         foreach ($results as $result) {
@@ -668,6 +668,66 @@ class ConnectController extends AbstractController
             $category->setEnableOnlineBooking($result->enable_online_booking);
             $category->setOldRentsoftId($result->old_rentsoft_id);
 
+            # GET SUB CATEGORIES
+            $sub_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = ".$result->id." AND type = '".$type."' ORDER BY name ASC");
+            $sub_collection = new ArrayCollection();
+
+            foreach ($sub_results as $sub_result) {
+                $sub_category = new SettingsCategory();
+                $sub_category->setId($sub_result->id);
+                $sub_category->setName($sub_result->name);
+                $sub_category->setParentId($sub_result->parent_id);
+                $sub_category->setEnableOnlineBooking($sub_result->enable_online_booking);
+                $sub_category->setLft($sub_result->lft);
+                $sub_category->setRgt($sub_result->rgt);
+                $sub_category->setLvl($sub_result->lvl);
+                $sub_category->setEnableOnlineBooking($sub_result->enable_online_booking);
+                $sub_category->setOldRentsoftId($sub_result->old_rentsoft_id);
+
+                # GET SUB CATEGORIES 1
+                $sub_results_1 = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = ".$sub_result->id." AND type = '".$type."' ORDER BY name ASC");
+                $sub_collection_1 = new ArrayCollection();
+
+                foreach ($sub_results_1 as $sub_result_1) {
+                    $sub_category_1 = new SettingsCategory();
+                    $sub_category_1->setId($sub_result_1->id);
+                    $sub_category_1->setName($sub_result_1->name);
+                    $sub_category_1->setParentId($sub_result_1->parent_id);
+                    $sub_category_1->setEnableOnlineBooking($sub_result_1->enable_online_booking);
+                    $sub_category_1->setLft($sub_result_1->lft);
+                    $sub_category_1->setRgt($sub_result_1->rgt);
+                    $sub_category_1->setLvl($sub_result_1->lvl);
+                    $sub_category_1->setEnableOnlineBooking($sub_result_1->enable_online_booking);
+                    $sub_category_1->setOldRentsoftId($sub_result_1->old_rentsoft_id);
+
+                    # GET SUB CATEGORIES 1
+                    $sub_results_2 = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = ".$sub_result_1->id." AND type = '".$type."' ORDER BY name ASC");
+                    $sub_collection_2 = new ArrayCollection();
+
+                    foreach ($sub_results_2 as $sub_result_2) {
+                        $sub_category_2 = new SettingsCategory();
+                        $sub_category_2->setId($sub_result_2->id);
+                        $sub_category_2->setName($sub_result_2->name);
+                        $sub_category_2->setParentId($sub_result_2->parent_id);
+                        $sub_category_2->setEnableOnlineBooking($sub_result_2->enable_online_booking);
+                        $sub_category_2->setLft($sub_result_2->lft);
+                        $sub_category_2->setRgt($sub_result_2->rgt);
+                        $sub_category_2->setLvl($sub_result_2->lvl);
+                        $sub_category_2->setEnableOnlineBooking($sub_result_2->enable_online_booking);
+                        $sub_category_2->setOldRentsoftId($sub_result_2->old_rentsoft_id);
+
+                        $sub_collection_2->add($sub_category_2);
+                    }
+
+                    $sub_category_1->setChildrens($sub_collection_2);
+                    $sub_collection_1->add($sub_category_1);
+                }
+
+                $sub_category->setChildrens($sub_collection_1);
+                $sub_collection->add($sub_category);
+            }
+
+            $category->setChildrens($sub_collection);
             $collection->add($category);
         }
 
