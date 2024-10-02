@@ -1,16 +1,16 @@
 {
   "name": "rentsoft/rentsoft_ms_api_gateway",
-  "version": "1.0.32",
+  "version": "1.0.33",
   "description": "description",
   "type": "symfony-bundle",
   "require": {
     "php": ">=8.0",
     "doctrine/collections": "*",
     "nette/database": "*",
-    "symfony/framework-bundle": "6.0.*",
-    "symfony/http-client": "6.0.*",
-    "symfony/http-foundation": "6.0.*",
-    "symfony/serializer": "6.0.*"
+    "symfony/framework-bundle": "7.1.*",
+    "symfony/http-client": "7.1.*",
+    "symfony/http-foundation": "7.1.*",
+    "symfony/serializer": "7.1.*"
   },
   "autoload": {
     "psr-4": {
