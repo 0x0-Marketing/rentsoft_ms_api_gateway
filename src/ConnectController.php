@@ -470,6 +470,123 @@ class ConnectController extends AbstractController
         return $model;
     }
 
+    public function getArticlesFast(array $options, $fetch_accessories = true, $fetch_images = true, $fetch_location = true, $fetch_attributes = true)
+    {
+        $sql_condition = null;
+        $limit = null;
+        $inner_join = null;
+        $order = "ORDER BY model ASC";
+
+        if (isset($options['location'])) {
+            $sql_condition .= " AND location_id = '" . $options['location'] . "'";
+        }
+
+        if (isset($options['articleGroup'])) {
+            $sql_condition .= " AND article_group_id = '" . $options['articleGroup'] . "'";
+        }
+
+        if (isset($options['oldRentsoftId'])) {
+            $sql_condition .= " AND old_rentsoft_id = '" . $options['oldRentsoftId'] . "'";
+        }
+
+        if (isset($options['articleType'])) {
+            $sql_condition .= " AND article_type = '" . $options['articleType'] . "'";
+        }
+
+        if (isset($options['manufacturer'])) {
+            $sql_condition .= " AND manufacturer = '" . $options['manufacturer'] . "'";
+        }
+
+        if (isset($options['category'])) {
+            $sql_condition .= " AND category_id = '" . $options['category'] . "'";
+        }
+
+        if (isset($options['tags']) && sizeof($options['tags']) > 0) {
+
+            $sql_condition .= " AND (";
+
+            foreach ($options['tags'] as $tag_group) {
+
+                foreach ($tag_group as $tag_entry) {
+                    $sql_condition .= "(article.tags LIKE '" . $tag_entry . "') OR ";
+                    $sql_condition .= "(article.tags LIKE '%" . $tag_entry . "%') ";
+                }
+
+                $sql_condition .= "AND ";
+            }
+
+            $sql_condition = substr($sql_condition, 0, (strlen($sql_condition) - 5));
+            $sql_condition .= ")";
+        }
+
+        if (isset($options['searchQuery'])) {
+            $sql_condition .= " AND (
+                LOWER(article.article_id) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
+                LOWER(name) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
+                LOWER(model) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
+                LOWER(model_description) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
+                LOWER(manufacturer) LIKE '%" . strtolower($options['searchQuery']) . "%') ";
+        }
+
+        if (isset($options['page'])) {
+
+            $limit = 40;
+
+            if (isset($options['limit'])) {
+                $limit = $options['limit'];
+            }
+
+            $offset = $options['page'] - 1;
+            $offset = $offset * $limit;
+            $limit = " LIMIT " . $limit . " OFFSET " . $offset . " ";
+        }
+
+        if (isset($options['order'])) {
+
+            $order = " ORDER BY ";
+            foreach ($options['order'] as $key => $value) {
+                $order .= " " . $key . " " . $value . ",";
+            }
+
+            $order = substr($order, 0, -1);
+        }
+
+        if (isset($options['online_booking_id'])) {
+            $inner_join = "INNER JOIN microservice_article_online_booking ON microservice_article_online_booking.article_id = article.id";
+            $sql_condition .= "AND microservice_article_online_booking.ms_online_booking_id = '" . $options['online_booking_id'] . "'";
+        }
+
+        if (isset($options['rentalDates'])) {
+
+            $start = new \DateTime();
+            $start->setTimestamp($options['rentalDates']['rentalStart']);
+
+            $end = new \DateTime();
+            $end->setTimestamp($options['rentalDates']['rentalEnd']);
+
+            $sub_sql = "SELECT article.id FROM article_booking INNER JOIN article ON article.id = article_booking.article_id WHERE
+                (
+                    (booking_start BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
+                    (booking_end BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
+                    (
+                        (booking_start <= '" . $start->format("Y-m-d H:i:s") . "' ) AND
+                        (booking_end >=  '" . $end->format("Y-m-d H:i:s") . "')
+                    )
+                )
+                GROUP BY article.id HAVING SUM(article_booking.quantity) >= article.quantity";
+
+            $sql_condition .= "AND article.id NOT IN (" . $sub_sql . ")";
+        }
+
+        $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . $order . $limit);
+
+        $collection = new ArrayCollection();
+        foreach ($results as $result) {
+            $collection->add($result);
+        }
+
+        return $collection;
+    }
 
     public function getArticles(array $options, $fetch_article_groups = true, $fetch_accessories = true, $fetch_images = true, $fetch_bookings = true, $fetch_location = true, $fetch_files = true, $fetch_attributes = true)
     {
