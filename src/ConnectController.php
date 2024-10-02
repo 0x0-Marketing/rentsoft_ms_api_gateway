@@ -582,7 +582,98 @@ class ConnectController extends AbstractController
 
         $collection = new ArrayCollection();
         foreach ($results as $result) {
-            $collection->add($result);
+
+            $model = new Article();
+            $model->setArticleId($result->article_id);
+            $model->setId($result->id);
+            $model->setClientId($result->client_id);
+            $model->setName($result->name);
+            $model->setNameEn($result->name_en);
+            $model->setNameFr($result->name_fr);
+            $model->setManufacturer($result->manufacturer);
+            $model->setModel($result->model);
+            $model->setModelDescription($result->model_description);
+            $model->setQuantity($result->quantity);
+            $model->setQuantityType($result->quantity_type);
+            $model->setDescriptionTeaser($result->description_teaser);
+            $model->setDescription($result->description);
+            $model->setOldRentsoftId($result->old_rentsoft_id);
+            $model->setDefaultPriceCalculation($result->default_price_calculation);
+            $model->setPriceFix($result->price_fix);
+            $model->setPriceFixDay($result->price_fix_day);
+            $model->setPriceDeposit($result->price_deposit);
+            $model->setArticleValue1($result->article_value1);
+            $model->setArticleValue2($result->article_value2);
+            $model->setArticleValue3($result->article_value3);
+            $model->setArticleValue4($result->article_value4);
+            $model->setArticleValue5($result->article_value5);
+            $model->setArticleValue6($result->article_value6);
+            $model->setPossibleBookingType($result->possible_booking_type);
+
+            if ($fetch_images === true) {
+
+                $image_results = $this->articleExplorer->fetchAll("SELECT * FROM article_image WHERE article_id = '" . $result->id . "' ORDER BY id ASC ");
+                $image_collection = new ArrayCollection();
+
+                foreach ($image_results as $image_result) {
+                    $image = new ArticleImage();
+                    $image->setId($image_result->id);
+                    $image->setMainImage($image_result->main_image);
+                    $image->setFilesize($image_result->filesize);
+                    $image->setFilepath($image_result->filepath);
+
+                    $image_collection->add($image);
+                }
+
+                $model->setImages($image_collection);
+            }
+
+            if ($fetch_attributes === true)
+            {
+                $attribute_results = $this->articleExplorer->fetchAll("SELECT * FROM article_attribute WHERE article_id = '" . $result->id . "'");
+                $attribute_collection = new ArrayCollection();
+
+                foreach ($attribute_results as $attribute_result) {
+                    $attribute = new ArticleAttribute();
+                    $attribute->setId($attribute_result->id);
+                    $attribute->setName($attribute_result->name);
+                    $attribute->setIcon($attribute_result->icon);
+                    $attribute->setValue($attribute_result->value);
+                    $attribute->setPriority($attribute_result->priority);
+                    $attribute->setType($attribute_result->type);
+
+                    $attribute_collection->add($attribute);
+                }
+
+                $model->setAttributes($attribute_collection);
+            }
+
+            if ($fetch_accessories === true)
+            {
+                $accessories_results = $this->articleExplorer->fetchAll("SELECT * FROM article_accessories WHERE article_id_parent = " . $result->id);
+                $accessories_collection = new ArrayCollection();
+
+                foreach ($accessories_results as $accessories_result) {
+                    $accessories = new ArticleAccessories();
+                    $accessories->setId($accessories_result->id);
+                    $accessories->setGroupName($accessories_result->group_name);
+                    $accessories->setMaxCount($accessories_result->max_count);
+                    $accessories->setRequiredMsOnlineBooking($accessories_result->required_ms_online_booking);
+                    $accessories->setTakeoverInProcess($accessories_result->takeover_in_process);
+                    $accessories->setArticleParent($model);
+                    $accessories->setEnabledMsOnlineBooking($accessories_result->enabled_ms_online_booking);
+                    $accessories->setEnableSingleSelectionRule($accessories_result->enable_single_selection_rule);
+
+                    $article_child = $this->getArticleDetail($accessories_result->article_id_child, false);
+                    $accessories->setArticleChild($article_child);
+
+                    $accessories_collection->add($accessories);
+                }
+
+                $model->setAccessories($accessories_collection);
+            }
+
+            $collection->add($model);
         }
 
         return $collection;
