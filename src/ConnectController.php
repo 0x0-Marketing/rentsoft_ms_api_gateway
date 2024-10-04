@@ -510,8 +510,8 @@ class ConnectController extends AbstractController
             foreach ($options['tags'] as $tag_group) {
 
                 foreach ($tag_group as $tag_entry) {
-                    $sql_condition .= "(article.tags LIKE '" . $tag_entry . "') OR ";
-                    $sql_condition .= "(article.tags LIKE '%" . $tag_entry . "%') ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag_entry) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%" . strtolower($tag_entry) . "%') ";
                 }
 
                 $sql_condition .= "AND ";
@@ -718,8 +718,8 @@ class ConnectController extends AbstractController
             foreach ($options['tags'] as $tag_group) {
 
                 foreach ($tag_group as $tag_entry) {
-                    $sql_condition .= "(article.tags LIKE '" . $tag_entry . "') OR ";
-                    $sql_condition .= "(article.tags LIKE '%" . $tag_entry . "%') ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag_entry) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%" . strtolower($tag_entry) . "%') ";
                 }
 
                 $sql_condition .= "AND ";
