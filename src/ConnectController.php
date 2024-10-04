@@ -334,6 +334,7 @@ class ConnectController extends AbstractController
         $model->setArticleValue5($result->article_value5);
         $model->setArticleValue6($result->article_value6);
         $model->setPossibleBookingType($result->possible_booking_type);
+        $model->setTags($result->tags);
 
         if ($result->location_id !== null && $fetch_location === true) {
             $location = $this->getLocationDetail($result->location_id);
@@ -610,6 +611,7 @@ class ConnectController extends AbstractController
             $model->setArticleValue5($result->article_value5);
             $model->setArticleValue6($result->article_value6);
             $model->setPossibleBookingType($result->possible_booking_type);
+            $model->setTags($result->tags);
 
             if ($fetch_images === true) {
 

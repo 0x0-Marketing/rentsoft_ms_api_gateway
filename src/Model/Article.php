@@ -37,6 +37,7 @@ class Article
     public $article_value_5;
     public $article_value_6;
     public $possible_booking_type;
+    public $tags;
     public ?SettingsLocation $location = null;
     public ?ArticleGroup $article_group = null;
     public ArrayCollection $bookings;
@@ -619,5 +620,19 @@ class Article
         $this->files = $files;
     }
 
+    /**
+     * @return mixed
+     */
+    public function getTags()
+    {
+        return $this->tags;
+    }
 
+    /**
+     * @param mixed $tags
+     */
+    public function setTags($tags): void
+    {
+        $this->tags = $tags;
+    }
 }
