@@ -31,6 +31,7 @@ use Rentsoft\RentsoftMsApiGateway\Model\PriceDeal;
 use Rentsoft\RentsoftMsApiGateway\Model\SettingsCategory;
 use Rentsoft\RentsoftMsApiGateway\Model\SettingsCountry;
 use Rentsoft\RentsoftMsApiGateway\Model\SettingsLocation;
+use Rentsoft\RentsoftMsApiGateway\Model\SettingsVoucherCodes;
 use Rentsoft\RentsoftMsApiGateway\Model\TagGroup;
 use Rentsoft\RentsoftMsApiGateway\Model\TagGroupEntry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
@@ -45,13 +46,13 @@ class ConnectController extends AbstractController
     public function __construct($article_host, $article_username, $article_password, $article_database, $ob_host, $ob_username, $ob_password, $ob_database)
     {
         $articleStorage = new MemoryStorage();
-        $articleConnection = new Connection("pgsql:host=".$article_host.";dbname=".$article_database, $article_username, $article_password);
+        $articleConnection = new Connection("pgsql:host=" . $article_host . ";dbname=" . $article_database, $article_username, $article_password);
         $articleStructure = new Structure($articleConnection, $articleStorage);
         $articleConventions = new StaticConventions();
         $articleExplorer = new Explorer($articleConnection, $articleStructure, $articleConventions, $articleStorage);
 
         $onlineBookingStorage = new MemoryStorage();
-        $onlineBookingConnection = new Connection("pgsql:host=".$ob_host.";dbname=".$ob_database, $ob_username, $ob_password);
+        $onlineBookingConnection = new Connection("pgsql:host=" . $ob_host . ";dbname=" . $ob_database, $ob_username, $ob_password);
         $onlineBookingStructure = new Structure($onlineBookingConnection, $onlineBookingStorage);
         $onlineBookingConventions = new StaticConventions();
         $onlineBookingExplorer = new Explorer($onlineBookingConnection, $onlineBookingStructure, $onlineBookingConventions, $onlineBookingStorage);
@@ -261,7 +262,7 @@ class ConnectController extends AbstractController
         # ACCESSORIES
         if ($fetch_accessories === true) {
 
-            $accessories_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_accessories WHERE article_group_id = " . $result->id." ORDER BY priority ASC");
+            $accessories_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_accessories WHERE article_group_id = " . $result->id . " ORDER BY priority ASC");
             $accessories_collection = new ArrayCollection();
 
             foreach ($accessories_results as $accessories_result) {
@@ -628,8 +629,7 @@ class ConnectController extends AbstractController
                 $model->setImages($image_collection);
             }
 
-            if ($fetch_attributes === true)
-            {
+            if ($fetch_attributes === true) {
                 $attribute_results = $this->articleExplorer->fetchAll("SELECT * FROM article_attribute WHERE article_id = '" . $result->id . "'");
                 $attribute_collection = new ArrayCollection();
 
@@ -648,8 +648,7 @@ class ConnectController extends AbstractController
                 $model->setAttributes($attribute_collection);
             }
 
-            if ($fetch_accessories === true)
-            {
+            if ($fetch_accessories === true) {
                 $accessories_results = $this->articleExplorer->fetchAll("SELECT * FROM article_accessories WHERE article_id_parent = " . $result->id);
                 $accessories_collection = new ArrayCollection();
 
@@ -841,6 +840,27 @@ class ConnectController extends AbstractController
         return $collection;
     }
 
+    public function getVoucherCodes($client_uuid)
+    {
+        $results = $this->onlineBookingExplorer->fetchAll("SELECT * FROM settings_vouchercodes WHERE client_id = '" . $client_uuid . "' ORDER BY code ASC");
+        $collection = new ArrayCollection();
+
+        foreach ($results as $result) {
+
+            $model = new SettingsVoucherCodes();
+            $model->setId($result->id);
+            $model->setClientId($client_uuid);
+            $model->setCode($result->code);
+            $model->setType($result->type);
+            $model->setValue($result->value);
+            $model->setValidUntil($result->valid_until);
+
+            $collection->add($model);
+        }
+
+        return $collection;
+    }
+
     public function getLocationDetail($id)
     {
         $result = $this->articleExplorer->fetch("SELECT * FROM settings_location WHERE id = '" . $id . "'");
@@ -861,7 +881,7 @@ class ConnectController extends AbstractController
 
     public function getFilterCategoryTree($client_uuid, $type = "article")
     {
-        $results = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id IS NULL AND type = '".$type."' ORDER BY name ASC");
+        $results = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id IS NULL AND type = '" . $type . "' ORDER BY name ASC");
         $collection = new ArrayCollection();
 
         foreach ($results as $result) {
@@ -877,7 +897,7 @@ class ConnectController extends AbstractController
             $category->setOldRentsoftId($result->old_rentsoft_id);
 
             # GET SUB CATEGORIES
-            $sub_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = ".$result->id." AND type = '".$type."' ORDER BY name ASC");
+            $sub_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = " . $result->id . " AND type = '" . $type . "' ORDER BY name ASC");
             $sub_collection = new ArrayCollection();
 
             foreach ($sub_results as $sub_result) {
@@ -893,7 +913,7 @@ class ConnectController extends AbstractController
                 $sub_category->setOldRentsoftId($sub_result->old_rentsoft_id);
 
                 # GET SUB CATEGORIES 1
-                $sub_results_1 = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = ".$sub_result->id." AND type = '".$type."' ORDER BY name ASC");
+                $sub_results_1 = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = " . $sub_result->id . " AND type = '" . $type . "' ORDER BY name ASC");
                 $sub_collection_1 = new ArrayCollection();
 
                 foreach ($sub_results_1 as $sub_result_1) {
@@ -909,7 +929,7 @@ class ConnectController extends AbstractController
                     $sub_category_1->setOldRentsoftId($sub_result_1->old_rentsoft_id);
 
                     # GET SUB CATEGORIES 1
-                    $sub_results_2 = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = ".$sub_result_1->id." AND type = '".$type."' ORDER BY name ASC");
+                    $sub_results_2 = $this->articleExplorer->fetchAll("SELECT * FROM settings_category WHERE client_id = '" . $client_uuid . "' AND enable_online_booking = true AND parent_id = " . $sub_result_1->id . " AND type = '" . $type . "' ORDER BY name ASC");
                     $sub_collection_2 = new ArrayCollection();
 
                     foreach ($sub_results_2 as $sub_result_2) {
@@ -1004,7 +1024,7 @@ class ConnectController extends AbstractController
         $now = new \DateTime();
 
         $this->articleExplorer->query("INSERT INTO article_booking (id, created_at, article_id, client_id, booking_start, booking_end, quantity) VALUES
-                                              ((SELECT MAX(id) + 1 FROM article_booking), '".$now->format("Y-m-d H:i:s")."', '" . $article_id . "', '" . $client_id . "', '" . $rental_start . "', '" .$rental_end . "', '".$quantity."')");
+                                              ((SELECT MAX(id) + 1 FROM article_booking), '" . $now->format("Y-m-d H:i:s") . "', '" . $article_id . "', '" . $client_id . "', '" . $rental_start . "', '" . $rental_end . "', '" . $quantity . "')");
     }
 
     public function calculatePriceForArticleGroups(array $article_groups_id_array, int $rental_start, int $rental_end)
