@@ -513,8 +513,7 @@ class ConnectController extends AbstractController
 
                     $tags = explode(",", $tag_entry);
 
-                    foreach ($tags as $tag)
-                    {
+                    foreach ($tags as $tag) {
                         $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
                         $sql_condition .= "(LOWER(article.tags) LIKE '%" . strtolower($tag) . "%')) OR ";
                     }
@@ -589,6 +588,7 @@ class ConnectController extends AbstractController
         }
 
         $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . $order . $limit);
+        $results_all = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . $order);
 
         $collection = new ArrayCollection();
         foreach ($results as $result) {
@@ -685,7 +685,12 @@ class ConnectController extends AbstractController
             $collection->add($model);
         }
 
-        return $collection;
+        return array(
+            'results' => $collection,
+            'total_results' => sizeof($results_all),
+            'page' => $options['page'],
+            'limit' => $options['limit']
+        );
     }
 
     public function getArticles(array $options, $fetch_article_groups = true, $fetch_accessories = true, $fetch_images = true, $fetch_bookings = true, $fetch_location = true, $fetch_files = true, $fetch_attributes = true)
