@@ -1002,6 +1002,7 @@ class ConnectController extends AbstractController
 
             foreach ($entry_results as $entry_result) {
                 $entry = new TagGroupEntry();
+                $entry->setId($entry_result->id);
                 $entry->setPosition($entry_result->position);
                 $entry->setName($entry_result->name);
                 $entry->setTagValues($entry_result->tag_values);
