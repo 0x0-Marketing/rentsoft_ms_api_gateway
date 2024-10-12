@@ -325,6 +325,7 @@ class ConnectController extends AbstractController
         $model->setOldRentsoftId($result->old_rentsoft_id);
         $model->setDefaultPriceCalculation($result->default_price_calculation);
         $model->setPriceFix($result->price_fix);
+        $model->setPercentagePriceValue($result->percentage_price_value);
         $model->setPriceFixDay($result->price_fix_day);
         $model->setPriceDeposit($result->price_deposit);
         $model->setArticleValue1($result->article_value1);
@@ -611,6 +612,7 @@ class ConnectController extends AbstractController
             $model->setDefaultPriceCalculation($result->default_price_calculation);
             $model->setPriceFix($result->price_fix);
             $model->setPriceFixDay($result->price_fix_day);
+            $model->setPercentagePriceValue($result->percentage_price_value);
             $model->setPriceDeposit($result->price_deposit);
             $model->setArticleValue1($result->article_value1);
             $model->setArticleValue2($result->article_value2);
@@ -1487,7 +1489,7 @@ class ConnectController extends AbstractController
         return $response;
     }
 
-    public function calculatePriceForArticlesFassbender(array $article_id_array, int $rental_start, int $rental_end, bool $calculate_deals_and_discounts = false, $rentsoft_customer_id = null)
+    public function calculatePriceForArticlesFassbender(array $article_id_array, int $rental_start, int $rental_end, bool $calculate_deals_and_discounts = false, $rentsoft_customer_id = null, $rental_price = null)
     {
         $returnData = [];
 
@@ -1596,6 +1598,15 @@ class ConnectController extends AbstractController
 
                         $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
                     }
+
+                    break;
+
+                case 40:
+                    $priceConfig = [];
+                    $priceConfig['calculationType'] = "";
+                    $priceConfig['calculationPriceType'] = "fix";
+
+                    $priceTotal = ($rental_price / 100) * $article->getPercentagePriceValue();
 
                     break;
             }

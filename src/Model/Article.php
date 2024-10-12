@@ -29,6 +29,7 @@ class Article
     public $price_deposit;
     public $price_fix;
     public $price_fix_day;
+    public $percentage_price_value;
     public $default_price_calculation;
     public $article_value_1;
     public $article_value_2;
@@ -634,5 +635,21 @@ class Article
     public function setTags($tags): void
     {
         $this->tags = $tags;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getPercentagePriceValue()
+    {
+        return $this->percentage_price_value;
+    }
+
+    /**
+     * @param mixed $percentage_price_value
+     */
+    public function setPercentagePriceValue($percentage_price_value): void
+    {
+        $this->percentage_price_value = $percentage_price_value;
     }
 }
