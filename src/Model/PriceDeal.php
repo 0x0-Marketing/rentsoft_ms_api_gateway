@@ -14,6 +14,23 @@ class PriceDeal
     public $valid_end;
     public $price;
     public $enabled_ms_online_booking;
+    public $old_rentsoft_id;
+
+    /**
+     * @return mixed
+     */
+    public function getOldRentsoftId()
+    {
+        return $this->old_rentsoft_id;
+    }
+
+    /**
+     * @param mixed $old_rentsoft_id
+     */
+    public function setOldRentsoftId($old_rentsoft_id): void
+    {
+        $this->old_rentsoft_id = $old_rentsoft_id;
+    }
 
     /**
      * @return mixed
