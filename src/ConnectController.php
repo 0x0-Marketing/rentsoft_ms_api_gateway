@@ -321,7 +321,11 @@ class ConnectController extends AbstractController
         $model->setQuantity($result->quantity);
         $model->setQuantityType($result->quantity_type);
         $model->setDescriptionTeaser($result->description_teaser);
+        $model->setDescriptionTeaserEn($result->description_teaser_en);
+        $model->setDescriptionTeaserFr($result->description_teaser_fr);
         $model->setDescription($result->description);
+        $model->setDescriptionEn($result->description_en);
+        $model->setDescriptionFr($result->description_fr);
         $model->setOldRentsoftId($result->old_rentsoft_id);
         $model->setDefaultPriceCalculation($result->default_price_calculation);
         $model->setPriceFix($result->price_fix);
@@ -612,7 +616,11 @@ class ConnectController extends AbstractController
             $model->setQuantity($result->quantity);
             $model->setQuantityType($result->quantity_type);
             $model->setDescriptionTeaser($result->description_teaser);
+            $model->setDescriptionTeaserEn($result->description_teaser_en);
+            $model->setDescriptionTeaserFr($result->description_teaser_fr);
             $model->setDescription($result->description);
+            $model->setDescriptionEn($result->description_en);
+            $model->setDescriptionFr($result->description_fr);
             $model->setOldRentsoftId($result->old_rentsoft_id);
             $model->setDefaultPriceCalculation($result->default_price_calculation);
             $model->setPriceFix($result->price_fix);

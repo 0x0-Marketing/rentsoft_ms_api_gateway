@@ -19,7 +19,11 @@ class Article
     public $quantity_type;
     public $quantity;
     public $description;
+    public $description_en;
+    public $description_fr;
     public $description_teaser;
+    public $description_teaser_en;
+    public $description_teaser_fr;
     public $serial_number;
     public $serial_code;
     public $old_rentsoft_id;
@@ -651,5 +655,69 @@ class Article
     public function setPercentagePriceValue($percentage_price_value): void
     {
         $this->percentage_price_value = $percentage_price_value;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDescriptionEn()
+    {
+        return $this->description_en;
+    }
+
+    /**
+     * @param mixed $description_en
+     */
+    public function setDescriptionEn($description_en): void
+    {
+        $this->description_en = $description_en;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDescriptionFr()
+    {
+        return $this->description_fr;
+    }
+
+    /**
+     * @param mixed $description_fr
+     */
+    public function setDescriptionFr($description_fr): void
+    {
+        $this->description_fr = $description_fr;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDescriptionTeaserEn()
+    {
+        return $this->description_teaser_en;
+    }
+
+    /**
+     * @param mixed $description_teaser_en
+     */
+    public function setDescriptionTeaserEn($description_teaser_en): void
+    {
+        $this->description_teaser_en = $description_teaser_en;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDescriptionTeaserFr()
+    {
+        return $this->description_teaser_fr;
+    }
+
+    /**
+     * @param mixed $description_teaser_fr
+     */
+    public function setDescriptionTeaserFr($description_teaser_fr): void
+    {
+        $this->description_teaser_fr = $description_teaser_fr;
     }
 }
