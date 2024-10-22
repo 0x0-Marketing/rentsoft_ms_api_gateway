@@ -1025,6 +1025,8 @@ class ConnectController extends AbstractController
                 $entry->setId($entry_result->id);
                 $entry->setPosition($entry_result->position);
                 $entry->setName($entry_result->name);
+                $entry->setNameEn($entry_result->name_en);
+                $entry->setNameFr($entry_result->name_fr);
                 $entry->setTagValues($entry_result->tag_values);
 
                 $collection_entry->add($entry);

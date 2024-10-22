@@ -8,6 +8,8 @@ class TagGroupEntry
 {
     public $id;
     public $name;
+    public $nameEn;
+    public $nameFr;
     public $tag_values;
     public $position;
 
@@ -73,6 +75,38 @@ class TagGroupEntry
     public function setPosition($position): void
     {
         $this->position = $position;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNameEn()
+    {
+        return $this->nameEn;
+    }
+
+    /**
+     * @param mixed $nameEn
+     */
+    public function setNameEn($nameEn): void
+    {
+        $this->nameEn = $nameEn;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNameFr()
+    {
+        return $this->nameFr;
+    }
+
+    /**
+     * @param mixed $nameFr
+     */
+    public function setNameFr($nameFr): void
+    {
+        $this->nameFr = $nameFr;
     }
 
 
