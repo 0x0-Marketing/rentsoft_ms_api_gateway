@@ -752,7 +752,9 @@ class ConnectController extends AbstractController
                     foreach ($tags as $tag)
                     {
                         $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
-                        $sql_condition .= "(LOWER(article.tags) LIKE '%" . strtolower($tag) . "%')) OR ";
+                        $sql_condition .= "((LOWER(article.tags) LIKE '," . strtolower($tag) . "') OR ";
+                        $sql_condition .= "((LOWER(article.tags) LIKE '," . strtolower($tag) . ",') OR ";
+                        $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . ",') OR ";
                     }
 
                     $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
