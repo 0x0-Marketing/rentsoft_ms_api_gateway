@@ -43,6 +43,7 @@ class Article
     public $article_value_6;
     public $possible_booking_type;
     public $tags;
+    public $relevance;
     public ?SettingsLocation $location = null;
     public ?ArticleGroup $article_group = null;
     public ArrayCollection $bookings;
@@ -719,5 +720,21 @@ class Article
     public function setDescriptionTeaserFr($description_teaser_fr): void
     {
         $this->description_teaser_fr = $description_teaser_fr;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRelevance()
+    {
+        return $this->relevance;
+    }
+
+    /**
+     * @param mixed $relevance
+     */
+    public function setRelevance($relevance): void
+    {
+        $this->relevance = $relevance;
     }
 }
