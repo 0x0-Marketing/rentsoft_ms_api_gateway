@@ -595,7 +595,7 @@ class ConnectController extends AbstractController
         }
 
         if (isset($options['quantity'])) {
-            $sql_condition .= " AND quantity >= ".$options['quantity'];
+            $sql_condition .= " AND quantity >= " . $options['quantity'];
         }
 
         $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . $order . $limit);
@@ -751,8 +751,7 @@ class ConnectController extends AbstractController
 
                     $tags = explode(",", $tag_entry);
 
-                    foreach ($tags as $tag)
-                    {
+                    foreach ($tags as $tag) {
                         $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
                         $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
                         $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
@@ -1072,7 +1071,7 @@ class ConnectController extends AbstractController
                                               ((SELECT MAX(id) + 1 FROM article_booking), '" . $now->format("Y-m-d H:i:s") . "', '" . $article_id . "', '" . $client_id . "', '" . $rental_start . "', '" . $rental_end . "', '" . $quantity . "')");
     }
 
-    public function calculatePriceForArticleGroups(array $article_groups_id_array, int $rental_start, int $rental_end)
+    public function calculatePriceForArticleGroups(array $article_groups_id_array, int $rental_start, int $rental_end, string $calculation_type = "per_night")
     {
         $returnData = [];
 
@@ -1124,11 +1123,23 @@ class ConnectController extends AbstractController
                 $rentalHours = 24;
             } else {
 
-                $startSplitted = explode(".", date("d.m.Y", $rental_start));
-                $rentalStartCalculation = mktime(10, 0, 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+                if ($calculation_type == "per_night") {
+                    $startSplitted = explode(".", date("d.m.Y", $rental_start));
+                    $rentalStartCalculation = mktime(10, 0, 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
 
-                $endSplitted = explode(".", date("d.m.Y", $rental_end));
-                $rentalEndCalculation = mktime(9, 59, 59, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                    $endSplitted = explode(".", date("d.m.Y", $rental_end));
+                    $rentalEndCalculation = mktime(9, 59, 59, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                }
+
+                if ($calculation_type == "exact") {
+                    $startSplitted = explode(".", date("d.m.Y", $rental_start));
+                    $startTimeSplitted = explode(":", date("H:i", $rental_start));
+                    $rentalStartCalculation = mktime($startTimeSplitted[0], $startTimeSplitted[1], 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+
+                    $endSplitted = explode(".", date("d.m.Y", $rental_end));
+                    $endTimeSplitted = explode(":", date("H:i", $rental_end));
+                    $rentalEndCalculation = mktime($endTimeSplitted[0], $endTimeSplitted[1], 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                }
 
                 $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
                 $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
