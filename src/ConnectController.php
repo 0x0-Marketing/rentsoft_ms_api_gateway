@@ -1139,6 +1139,7 @@ class ConnectController extends AbstractController
                     $endSplitted = explode(".", date("d.m.Y", $rental_end));
                     $endTimeSplitted = explode(":", date("H:i", $rental_end));
                     $rentalEndCalculation = mktime($endTimeSplitted[0], $endTimeSplitted[1], 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                    $rentalEndCalculation --;
                 }
 
                 $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
