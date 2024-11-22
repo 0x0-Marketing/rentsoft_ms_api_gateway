@@ -384,7 +384,7 @@ class ConnectController extends AbstractController
                 $booking = new ArticleBooking();
                 $booking->setBookingEnd($booking_result->booking_end);
                 $booking->setBookingStart($booking_result->booking_start);
-                $booking->setArticle($model);
+//                $booking->setArticle($model);
                 $booking->setQuantity($booking_result->quantity);
                 $booking->setOldRentsoftProcessId($booking_result->old_rentsoft_process_id);
 
