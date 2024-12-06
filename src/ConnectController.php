@@ -515,25 +515,18 @@ class ConnectController extends AbstractController
             $sql_condition .= " AND (";
 
             foreach ($options['tags'] as $tag_group) {
-
-                foreach ($tag_group as $tag_entry) {
-
-                    $tags = explode(",", $tag_entry);
-
-                    foreach ($tags as $tag) {
-                        $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
-                        $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
-                        $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
-                        $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
-                    }
-
-                    $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
-                    $sql_condition .= " AND ";
+                foreach ($tag_group as $tag) {
+                    $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
                 }
 
-                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
+                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
+                $sql_condition .= " AND ";
             }
 
+            $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
             $sql_condition .= ")";
         }
 
@@ -748,25 +741,18 @@ class ConnectController extends AbstractController
             $sql_condition .= " AND (";
 
             foreach ($options['tags'] as $tag_group) {
-
-                foreach ($tag_group as $tag_entry) {
-
-                    $tags = explode(",", $tag_entry);
-
-                    foreach ($tags as $tag) {
-                        $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
-                        $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
-                        $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
-                        $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
-                    }
-
-                    $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
-                    $sql_condition .= " AND ";
+                foreach ($tag_group as $tag) {
+                    $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
                 }
 
-                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
+                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
+                $sql_condition .= " AND ";
             }
 
+            $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
             $sql_condition .= ")";
         }
 
