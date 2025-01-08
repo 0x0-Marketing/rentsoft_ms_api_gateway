@@ -842,8 +842,10 @@ class ConnectController extends AbstractController
 
         foreach ($bookings as $booking) {
 
-            $bookingStart = $booking->getBookingStart()->getTimestamp();
-            $bookingEnd = $booking->getBookingEnd()->getTimestamp();
+            $bookingStart = new \DateTime($booking->booking_start);
+            $bookingStart = $bookingStart->getTimestamp();
+            $bookingEnd = new \DateTime($booking->booking_end);
+            $bookingEnd = $bookingEnd->getTimestamp();
 
             if (
                 ($bookingStart <= $rentalStart && $bookingEnd >= $rentalEnd) ||
@@ -852,9 +854,9 @@ class ConnectController extends AbstractController
                 ($bookingStart >= $rentalStart && $bookingStart <= $rentalEnd && $bookingEnd >= $rentalEnd)
             ) {
 
-                for ($i = 1; $i <= $booking->getQuantity(); $i++) {
+                for ($i = 1; $i <= $booking->quantity; $i++) {
 
-                    $identifier = $booking->getId() . "_" . $i;
+                    $identifier = $booking->id . "_" . $i;
 
                     if (!in_array($identifier, $articleArray)) {
                         $articleArray[$identifier] = "not available";
@@ -863,10 +865,10 @@ class ConnectController extends AbstractController
 
                 # BUILD RESPONSE
                 $bookingArray[$bookingArrayCounter] = array(
-                    'ds' => json_decode($booking->getOptionalData()),
-                    'quantity' => $booking->getQuantity(),
-                    'rentalStart' => $booking->getBookingStart()->format("d.m.Y H:i"),
-                    'rentalEnd' => $booking->getBookingEnd()->format("d.m.Y H:i")
+                    'ds' => json_decode($booking->optional_data),
+                    'quantity' => $booking->quantity,
+                    'rentalStart' => date("d.m.Y H:i:s", $rentalStart),
+                    'rentalEnd' => date("d.m.Y H:i:s", $rentalEnd),
                 );
 
                 $bookingArrayCounter++;
