@@ -878,6 +878,7 @@ class ConnectController extends AbstractController
         $availableCount = $maxAvailable - count($articleArray);
         if ($availableCount <= 0) {
             $isAvailable = false;
+            $availableCount = 0;
         }
 
         $returnArray = array(
