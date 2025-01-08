@@ -877,7 +877,7 @@ class ConnectController extends AbstractController
         if ($availableCount <= 0) {
             $isAvailable = false;
         }
-
+ 
         $returnArray = array(
             'givenStart' => date("d.m.Y", $rentalStart),
             'givenEnd' => date("d.m.Y", $rental_end),
