@@ -826,6 +826,69 @@ class ConnectController extends AbstractController
         return $collection;
     }
 
+    public function getAvailability($article_id, $rental_start, $rental_end)
+    {
+        $rentalStart = $rental_start;
+        $rentalEnd= $rental_end;
+
+        $bookings = $this->articleExplorer->fetchAll("SELECT * FROM article_booking WHERE article_id = '" . $article_id . "'");
+        $article = static::getArticleDetail($article_id, false, false, false, false,false, false, false, false);
+
+        $isAvailable = true;
+        $bookingArray = array();
+        $articleArray = array();
+        $bookingArrayCounter = 0;
+        $maxAvailable = $article->getQuantity();
+
+        foreach ($bookings as $booking) {
+
+            $bookingStart = $booking->getBookingStart()->getTimestamp();
+            $bookingEnd = $booking->getBookingEnd()->getTimestamp();
+
+            if (
+                ($bookingStart <= $rentalStart && $bookingEnd >= $rentalEnd) ||
+                ($bookingStart >= $rentalStart && $bookingEnd <= $rentalEnd) ||
+                ($bookingStart <= $rentalStart && $bookingEnd >= $rentalStart && $bookingEnd <= $rentalEnd) ||
+                ($bookingStart >= $rentalStart && $bookingStart <= $rentalEnd && $bookingEnd >= $rentalEnd)
+            ) {
+
+                for ($i = 1; $i <= $booking->getQuantity(); $i++) {
+
+                    $identifier = $booking->getId() . "_" . $i;
+
+                    if (!in_array($identifier, $articleArray)) {
+                        $articleArray[$identifier] = "not available";
+                    }
+                }
+
+                # BUILD RESPONSE
+                $bookingArray[$bookingArrayCounter] = array(
+                    'ds' => json_decode($booking->getOptionalData()),
+                    'quantity' => $booking->getQuantity(),
+                    'rentalStart' => $booking->getBookingStart()->format("d.m.Y H:i"),
+                    'rentalEnd' => $booking->getBookingEnd()->format("d.m.Y H:i")
+                );
+
+                $bookingArrayCounter++;
+            }
+        }
+
+        $availableCount = $maxAvailable - count($articleArray);
+        if ($availableCount <= 0) {
+            $isAvailable = false;
+        }
+
+        $returnArray = array(
+            'givenStart' => date("d.m.Y", $rentalStart),
+            'givenEnd' => date("d.m.Y", $rental_end),
+            'isAvailable' => $isAvailable,
+            'availableQuantity' => $availableCount,
+            'bookings' => $bookingArray
+        );
+
+        return $returnArray;
+    }
+
     public function getCountries($client_uuid)
     {
         $results = $this->articleExplorer->fetchAll("SELECT * FROM settings_country WHERE client_id = '" . $client_uuid . "'");
@@ -1127,7 +1190,7 @@ class ConnectController extends AbstractController
                     $endSplitted = explode(".", date("d.m.Y", $rental_end));
                     $endTimeSplitted = explode(":", date("H:i", $rental_end));
                     $rentalEndCalculation = mktime($endTimeSplitted[0], $endTimeSplitted[1], 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
-                    $rentalEndCalculation --;
+                    $rentalEndCalculation--;
                 }
 
                 $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
