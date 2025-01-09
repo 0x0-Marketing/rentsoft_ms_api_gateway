@@ -457,6 +457,7 @@ class ConnectController extends AbstractController
             $accessories_collection = new ArrayCollection();
 
             foreach ($accessories_results as $accessories_result) {
+
                 $accessories = new ArticleAccessories();
                 $accessories->setId($accessories_result->id);
                 $accessories->setGroupName($accessories_result->group_name);
@@ -1362,14 +1363,13 @@ class ConnectController extends AbstractController
                                   price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
                 if ($price_rate_result !== null && sizeof($price_rate_result) > 0) {
-                    $priceRateResult = $price_rate_result[0];
 
                     $priceConfig = [];
                     $priceConfig['calculationType'] = "per_day";
                     $priceConfig['calculationPriceType'] = "rates";
 
-                    $priceTotal = $priceRateResult['price'];
-                    $kmhTotal = $priceRateResult['unitFree'];
+                    $priceTotal = $price_rate_result->unit_price;
+                    $kmhTotal = $price_rate_result->unit_free;
                 } else {
                     $priceConfig = [];
                     $priceConfig['calculationType'] = "per_day";
