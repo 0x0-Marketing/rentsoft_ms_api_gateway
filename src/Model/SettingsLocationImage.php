@@ -7,7 +7,7 @@ class SettingsLocationImage
     public $id;
     public $filepath;
     public $filesize;
-    public $main_image;
+    public $mainImage;
 
     /**
      * @return mixed
@@ -62,14 +62,16 @@ class SettingsLocationImage
      */
     public function getMainImage()
     {
-        return $this->main_image;
+        return $this->mainImage;
     }
 
     /**
-     * @param mixed $main_image
+     * @param mixed $mainImage
      */
-    public function setMainImage($main_image): void
+    public function setMainImage($mainImage): void
     {
-        $this->main_image = $main_image;
+        $this->mainImage = $mainImage;
     }
+
+
 }
