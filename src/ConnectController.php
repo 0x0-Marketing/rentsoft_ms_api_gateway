@@ -983,7 +983,7 @@ class ConnectController extends AbstractController
             $model->setId($image->id);
             $model->setFilepath($image->filepath);
             $model->setFilesize($image->filesize);
-            $model->setMainImage($result->main_image);
+            $model->setMainImage($image->main_image);
 
             $image_collection->add($model);
         }
