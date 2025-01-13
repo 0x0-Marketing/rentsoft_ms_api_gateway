@@ -979,7 +979,7 @@ class ConnectController extends AbstractController
         foreach ($image_results as $image) {
 
             $image_model = new SettingsLocationImage();
-            $image_model->setLocation($model);
+            //$image_model->setLocation($model);
             $image_model->setId($image->id);
             $image_model->setFilepath($image->filepath);
             $image_model->setFilesize($image->filesize);
