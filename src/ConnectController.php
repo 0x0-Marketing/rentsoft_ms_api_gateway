@@ -385,7 +385,6 @@ class ConnectController extends AbstractController
                 $booking = new ArticleBooking();
                 $booking->setBookingEnd($booking_result->booking_end);
                 $booking->setBookingStart($booking_result->booking_start);
-//                $booking->setArticle($model);
                 $booking->setQuantity($booking_result->quantity);
                 $booking->setOldRentsoftProcessId($booking_result->old_rentsoft_process_id);
 
@@ -465,11 +464,10 @@ class ConnectController extends AbstractController
                 $accessories->setMaxCount($accessories_result->max_count);
                 $accessories->setRequiredMsOnlineBooking($accessories_result->required_ms_online_booking);
                 $accessories->setTakeoverInProcess($accessories_result->takeover_in_process);
-                $accessories->setArticleParent($model);
                 $accessories->setEnabledMsOnlineBooking($accessories_result->enabled_ms_online_booking);
                 $accessories->setEnableSingleSelectionRule($accessories_result->enable_single_selection_rule);
 
-                $article_child = $this->getArticleDetail($accessories_result->article_id_child, false);
+                $article_child = $this->getArticleDetail($accessories_result->article_id_child, false, false, false, false, false, false, false, false);
                 $accessories->setArticleChild($article_child);
 
                 $accessories_collection->add($accessories);
@@ -930,6 +928,7 @@ class ConnectController extends AbstractController
             $model->setCity($result->city);
             $model->setCountry($result->country);
             $model->setOldRentsoftId($result->old_rentsoft_id);
+            $model->setStatus($result->status);
 
             $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $model->getId() );
             $image_collection = new ArrayCollection();
@@ -953,6 +952,41 @@ class ConnectController extends AbstractController
         return $collection;
     }
 
+    public function getLocationDetail($id)
+    {
+        $result = $this->articleExplorer->fetch("SELECT * FROM settings_location WHERE id = '" . $id . "'");
+
+        $model = new SettingsLocation();
+        $model->setId($result->id);
+        $model->setClientId($result->client_id);
+        $model->setName($result->name);
+        $model->setStreet($result->street);
+        $model->setHouseNumber($result->house_number);
+        $model->setZip($result->zip);
+        $model->setCity($result->city);
+        $model->setCountry($result->country);
+        $model->setOldRentsoftId($result->old_rentsoft_id);
+        $model->setStatus($result->status);
+
+        $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $id );
+        $image_collection = new ArrayCollection();
+
+        foreach ($image_results as $image) {
+
+            $image_model = new SettingsLocationImage();
+            $image_model->setId($image->id);
+            $image_model->setFilepath($image->filepath);
+            $image_model->setFilesize($image->filesize);
+            $image_model->setMainImage($image->main_image);
+
+            $image_collection->add($image_model);
+        }
+
+        $model->setImages($image_collection);
+
+        return $model;
+    }
+
     public function getVoucherCodes($client_uuid)
     {
         $results = $this->onlineBookingExplorer->fetchAll("SELECT * FROM settings_vouchercodes WHERE client_id = '" . $client_uuid . "' ORDER BY code ASC");
@@ -972,40 +1006,6 @@ class ConnectController extends AbstractController
         }
 
         return $collection;
-    }
-
-    public function getLocationDetail($id)
-    {
-        $result = $this->articleExplorer->fetch("SELECT * FROM settings_location WHERE id = '" . $id . "'");
-
-        $model = new SettingsLocation();
-        $model->setId($result->id);
-        $model->setClientId($result->client_id);
-        $model->setName($result->name);
-        $model->setStreet($result->street);
-        $model->setHouseNumber($result->house_number);
-        $model->setZip($result->zip);
-        $model->setCity($result->city);
-        $model->setCountry($result->country);
-        $model->setOldRentsoftId($result->old_rentsoft_id);
-
-        $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $id );
-        $image_collection = new ArrayCollection();
-
-        foreach ($image_results as $image) {
-
-            $image_model = new SettingsLocationImage();
-            $image_model->setId($image->id);
-            $image_model->setFilepath($image->filepath);
-            $image_model->setFilesize($image->filesize);
-            $image_model->setMainImage($image->main_image);
-
-            $image_collection->add($image_model);
-        }
-
-        $model->setImages($image_collection);
-
-        return $model;
     }
 
     public function getFilterCategoryTree($client_uuid, $type = "article")

@@ -15,7 +15,24 @@ class SettingsLocation
     public $city;
     public $country;
     public $old_rentsoft_id;
+    public $status;
     public ArrayCollection $images;
+
+    /**
+     * @return mixed
+     */
+    public function getStatus()
+    {
+        return $this->status;
+    }
+
+    /**
+     * @param mixed $status
+     */
+    public function setStatus($status): void
+    {
+        $this->status = $status;
+    }
 
     /**
      * @return mixed
