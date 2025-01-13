@@ -5,7 +5,6 @@ namespace Rentsoft\RentsoftMsApiGateway\Model;
 class SettingsLocationImage
 {
     public $id;
-    public $location;
     public $filepath;
     public $filesize;
     public $main_image;
@@ -24,22 +23,6 @@ class SettingsLocationImage
     public function setId($id): void
     {
         $this->id = $id;
-    }
-
-    /**
-     * @return mixed
-     */
-    public function getLocation()
-    {
-        return $this->location;
-    }
-
-    /**
-     * @param mixed $location
-     */
-    public function setLocation($location): void
-    {
-        $this->location = $location;
     }
 
     /**

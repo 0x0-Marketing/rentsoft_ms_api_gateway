@@ -931,6 +931,22 @@ class ConnectController extends AbstractController
             $model->setCountry($result->country);
             $model->setOldRentsoftId($result->old_rentsoft_id);
 
+            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $model->getId() );
+            $image_collection = new ArrayCollection();
+
+            foreach ($image_results as $image) {
+
+                $image_model = new SettingsLocationImage();
+                $image_model->setId($image->id);
+                $image_model->setFilepath($image->filepath);
+                $image_model->setFilesize($image->filesize);
+                $image_model->setMainImage($image->main_image);
+
+                $image_collection->add($image_model);
+            }
+
+            $model->setImages($image_collection);
+
             $collection->add($model);
         }
 
@@ -979,7 +995,6 @@ class ConnectController extends AbstractController
         foreach ($image_results as $image) {
 
             $image_model = new SettingsLocationImage();
-            //$image_model->setLocation($model);
             $image_model->setId($image->id);
             $image_model->setFilepath($image->filepath);
             $image_model->setFilesize($image->filesize);
