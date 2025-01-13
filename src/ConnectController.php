@@ -978,14 +978,14 @@ class ConnectController extends AbstractController
 
         foreach ($image_results as $image) {
 
-            $model = new SettingsLocationImage();
-            $model->setLocation($model);
-            $model->setId($image->id);
-            $model->setFilepath($image->filepath);
-            $model->setFilesize($image->filesize);
-            $model->setMainImage($image->main_image);
+            $image_model = new SettingsLocationImage();
+            $image_model->setLocation($model);
+            $image_model->setId($image->id);
+            $image_model->setFilepath($image->filepath);
+            $image_model->setFilesize($image->filesize);
+            $image_model->setMainImage($image->main_image);
 
-            $image_collection->add($model);
+            $image_collection->add($image_model);
         }
 
         $model->setImages($image_collection);
