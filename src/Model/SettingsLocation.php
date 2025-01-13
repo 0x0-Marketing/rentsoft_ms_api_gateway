@@ -15,6 +15,7 @@ class SettingsLocation
     public $city;
     public $country;
     public $old_rentsoft_id;
+    public ArrayCollection $images;
 
     /**
      * @return mixed
@@ -158,6 +159,16 @@ class SettingsLocation
     public function setOldRentsoftId($old_rentsoft_id): void
     {
         $this->old_rentsoft_id = $old_rentsoft_id;
+    }
+
+    public function getImages(): ArrayCollection
+    {
+        return $this->images;
+    }
+
+    public function setImages(ArrayCollection $images): void
+    {
+        $this->images = $images;
     }
 
 

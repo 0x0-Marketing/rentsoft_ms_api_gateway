@@ -31,6 +31,7 @@ use Rentsoft\RentsoftMsApiGateway\Model\PriceDeal;
 use Rentsoft\RentsoftMsApiGateway\Model\SettingsCategory;
 use Rentsoft\RentsoftMsApiGateway\Model\SettingsCountry;
 use Rentsoft\RentsoftMsApiGateway\Model\SettingsLocation;
+use Rentsoft\RentsoftMsApiGateway\Model\SettingsLocationImage;
 use Rentsoft\RentsoftMsApiGateway\Model\SettingsVoucherCodes;
 use Rentsoft\RentsoftMsApiGateway\Model\TagGroup;
 use Rentsoft\RentsoftMsApiGateway\Model\TagGroupEntry;
@@ -971,6 +972,23 @@ class ConnectController extends AbstractController
         $model->setCity($result->city);
         $model->setCountry($result->country);
         $model->setOldRentsoftId($result->old_rentsoft_id);
+
+        $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $id );
+        $image_collection = new ArrayCollection();
+
+        foreach ($image_results as $image) {
+
+            $model = new SettingsLocationImage();
+            $model->setLocation($model);
+            $model->setId($image->id);
+            $model->setFilepath($image->filepath);
+            $model->setFilesize($image->filesize);
+            $model->setMainImage($result->main_image);
+
+            $image_collection->add($model);
+        }
+
+        $model->setImages($image_collection);
 
         return $model;
     }
