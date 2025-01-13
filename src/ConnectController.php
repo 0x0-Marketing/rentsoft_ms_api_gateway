@@ -467,7 +467,7 @@ class ConnectController extends AbstractController
                 $accessories->setEnabledMsOnlineBooking($accessories_result->enabled_ms_online_booking);
                 $accessories->setEnableSingleSelectionRule($accessories_result->enable_single_selection_rule);
 
-                $article_child = $this->getArticleDetail($accessories_result->article_id_child, false, false, false, false, false, false, false, false);
+                $article_child = $this->getArticleDetail($accessories_result->article_id_child, false, false, true, false, false, false, false, false);
                 $accessories->setArticleChild($article_child);
 
                 $accessories_collection->add($accessories);
@@ -681,7 +681,6 @@ class ConnectController extends AbstractController
                     $accessories->setMaxCount($accessories_result->max_count);
                     $accessories->setRequiredMsOnlineBooking($accessories_result->required_ms_online_booking);
                     $accessories->setTakeoverInProcess($accessories_result->takeover_in_process);
-                    $accessories->setArticleParent($model);
                     $accessories->setEnabledMsOnlineBooking($accessories_result->enabled_ms_online_booking);
                     $accessories->setEnableSingleSelectionRule($accessories_result->enable_single_selection_rule);
 
