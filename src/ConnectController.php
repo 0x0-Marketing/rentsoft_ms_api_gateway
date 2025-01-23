@@ -3,7 +3,6 @@
 namespace Rentsoft\RentsoftMsApiGateway;
 
 use Doctrine\Common\Collections\ArrayCollection;
-use Http\Discovery\Exception\NotFoundException;
 use Nette\Database\Connection;
 use Nette\Database\Conventions\StaticConventions;
 use Nette\Database\Explorer;
@@ -36,8 +35,8 @@ use Rentsoft\RentsoftMsApiGateway\Model\SettingsVoucherCodes;
 use Rentsoft\RentsoftMsApiGateway\Model\TagGroup;
 use Rentsoft\RentsoftMsApiGateway\Model\TagGroupEntry;
 use Symfony\Bundle\FrameworkBundle\Controller\AbstractController;
-use Symfony\Component\DependencyInjection\ParameterBag\ParameterBagInterface;
 use Symfony\Component\HttpFoundation\Response;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 class ConnectController extends AbstractController
 {
@@ -173,7 +172,7 @@ class ConnectController extends AbstractController
         $result = $this->articleExplorer->fetch("SELECT * FROM article_group WHERE id = '" . $id . "'");
 
         if ($result === null) {
-            throw new NotFoundException("ArticleGroup not found");
+            throw new NotFoundHttpException("ArticleGroup not found");
         }
 
         $model = new ArticleGroup();
