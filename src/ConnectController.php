@@ -172,6 +172,10 @@ class ConnectController extends AbstractController
     {
         $result = $this->articleExplorer->fetch("SELECT * FROM article_group WHERE id = '" . $id . "'");
 
+        if ($result === null) {
+            throw new NotFoundException("ArticleGroup not found");
+        }
+
         $model = new ArticleGroup();
         $model->setId($result->id);
         $model->setClientId($result->client_id);
@@ -828,10 +832,10 @@ class ConnectController extends AbstractController
     public function getAvailability($article_id, $rental_start, $rental_end)
     {
         $rentalStart = $rental_start;
-        $rentalEnd= $rental_end;
+        $rentalEnd = $rental_end;
 
         $bookings = $this->articleExplorer->fetchAll("SELECT * FROM article_booking WHERE article_id = '" . $article_id . "'");
-        $article = static::getArticleDetail($article_id, false, false, false, false,false, false, false, false);
+        $article = static::getArticleDetail($article_id, false, false, false, false, false, false, false, false);
 
         $isAvailable = true;
         $bookingArray = array();
@@ -929,7 +933,7 @@ class ConnectController extends AbstractController
             $model->setOldRentsoftId($result->old_rentsoft_id);
             $model->setStatus($result->status);
 
-            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $model->getId() );
+            $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $model->getId());
             $image_collection = new ArrayCollection();
 
             foreach ($image_results as $image) {
@@ -955,6 +959,10 @@ class ConnectController extends AbstractController
     {
         $result = $this->articleExplorer->fetch("SELECT * FROM settings_location WHERE id = '" . $id . "'");
 
+        if ($result === null) {
+            throw new NotFoundException("Location not found");
+        }
+
         $model = new SettingsLocation();
         $model->setId($result->id);
         $model->setClientId($result->client_id);
@@ -967,7 +975,7 @@ class ConnectController extends AbstractController
         $model->setOldRentsoftId($result->old_rentsoft_id);
         $model->setStatus($result->status);
 
-        $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $id );
+        $image_results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location_image WHERE location_id = " . $id);
         $image_collection = new ArrayCollection();
 
         foreach ($image_results as $image) {
