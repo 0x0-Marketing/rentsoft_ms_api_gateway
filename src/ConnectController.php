@@ -179,6 +179,8 @@ class ConnectController extends AbstractController
         $model->setId($result->id);
         $model->setClientId($result->client_id);
         $model->setName($result->name);
+        $model->setNameEn($result->name_en);
+        $model->setNameFr($result->name_fr);
         $model->setDescription($result->description);
         $model->setDescriptionEn($result->description_en);
         $model->setDescriptionFr($result->description_fr);

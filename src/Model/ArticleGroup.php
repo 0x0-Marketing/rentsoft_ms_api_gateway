@@ -10,6 +10,8 @@ class ArticleGroup
     protected $id;
     protected $client_id;
     protected $name;
+    protected $name_en;
+    protected $name_fr;
     protected $old_rentsoft_id;
     protected $max_rental_end_timestamp = null;
     protected $price_display;
@@ -81,6 +83,38 @@ class ArticleGroup
     public function setName($name): void
     {
         $this->name = $name;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNameEn()
+    {
+        return $this->name_en;
+    }
+
+    /**
+     * @param mixed $name_en
+     */
+    public function setNameEn($name_en): void
+    {
+        $this->name_en = $name_en;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getNameFr()
+    {
+        return $this->name_fr;
+    }
+
+    /**
+     * @param mixed $name_fr
+     */
+    public function setNameFr($name_fr): void
+    {
+        $this->name_fr = $name_fr;
     }
 
     /**
@@ -270,6 +304,4 @@ class ArticleGroup
     {
         $this->min_rentals = $min_rentals;
     }
-
-
 }
