@@ -12,6 +12,23 @@ class ArticleGroupMinRental
     public \DateTime|string $valid_start;
     public \DateTime|string $valid_end;
     public int $min_rental_days;
+    protected $old_rentsoft_id;
+
+    /**
+     * @return mixed
+     */
+    public function getOldRentsoftId()
+    {
+        return $this->old_rentsoft_id;
+    }
+
+    /**
+     * @param mixed $old_rentsoft_id
+     */
+    public function setOldRentsoftId($old_rentsoft_id): void
+    {
+        $this->old_rentsoft_id = $old_rentsoft_id;
+    }
 
     public function getId(): int
     {

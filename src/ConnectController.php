@@ -239,6 +239,7 @@ class ConnectController extends AbstractController
 
                 $min_rental = new ArticleGroupMinRental();
                 $min_rental->setId($min_rental_result->id);
+                $min_rental->setOldRentsoftId($min_rental_result->old_rentsoft_id);
                 $min_rental->setName($min_rental_result->name);
                 $min_rental->setValidEnd($min_rental_result->valid_end);
                 $min_rental->setValidStart($min_rental_result->valid_start);
