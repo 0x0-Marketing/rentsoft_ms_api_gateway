@@ -596,7 +596,7 @@ class ConnectController extends AbstractController
         }
 
         if (isset($options['quantity'])) {
-            $sql_condition .= " AND quantity >= " . $options['quantity'];
+            $sql_condition .= " AND quantity >= '" . $options['quantity']."'";
         }
 
         $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . $order . $limit);
