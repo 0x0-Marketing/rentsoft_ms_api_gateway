@@ -596,7 +596,7 @@ class ConnectController extends AbstractController
         }
 
         if (isset($options['quantity'])) {
-            $sql_condition .= " AND quantity >= '" . $options['quantity']."'";
+            $sql_condition .= " AND quantity >= '" . $options['quantity'] . "'";
         }
 
         $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . $order . $limit);
@@ -742,7 +742,7 @@ class ConnectController extends AbstractController
             $category_result = $this->articleExplorer->fetch("SELECT * FROM settings_category WHERE id = '" . $options['category'] . "'");
 
             $sub_sql = "SELECT settings_category.id FROM settings_category 
-                            WHERE settings_category.lft >= " . $category_result->lft. " AND settings_category.rgt <= " . $category_result->rgt." AND settings_category.tree_root = ".$category_result->tree_root;
+                            WHERE settings_category.lft >= " . $category_result->lft . " AND settings_category.rgt <= " . $category_result->rgt . " AND settings_category.tree_root = " . $category_result->tree_root;
             $sql_condition .= "AND article.category_id IN (" . $sub_sql . ")";
         }
 
@@ -850,38 +850,40 @@ class ConnectController extends AbstractController
         $bookingArrayCounter = 0;
         $maxAvailable = $article->getQuantity();
 
-        foreach ($bookings as $booking) {
+        if (!is_null($bookings)) {
+            foreach ($bookings as $booking) {
 
-            $bookingStart = new \DateTime($booking->booking_start);
-            $bookingStart = $bookingStart->getTimestamp();
-            $bookingEnd = new \DateTime($booking->booking_end);
-            $bookingEnd = $bookingEnd->getTimestamp();
+                $bookingStart = new \DateTime($booking->booking_start);
+                $bookingStart = $bookingStart->getTimestamp();
+                $bookingEnd = new \DateTime($booking->booking_end);
+                $bookingEnd = $bookingEnd->getTimestamp();
 
-            if (
-                ($bookingStart <= $rentalStart && $bookingEnd >= $rentalEnd) ||
-                ($bookingStart >= $rentalStart && $bookingEnd <= $rentalEnd) ||
-                ($bookingStart <= $rentalStart && $bookingEnd >= $rentalStart && $bookingEnd <= $rentalEnd) ||
-                ($bookingStart >= $rentalStart && $bookingStart <= $rentalEnd && $bookingEnd >= $rentalEnd)
-            ) {
+                if (
+                    ($bookingStart <= $rentalStart && $bookingEnd >= $rentalEnd) ||
+                    ($bookingStart >= $rentalStart && $bookingEnd <= $rentalEnd) ||
+                    ($bookingStart <= $rentalStart && $bookingEnd >= $rentalStart && $bookingEnd <= $rentalEnd) ||
+                    ($bookingStart >= $rentalStart && $bookingStart <= $rentalEnd && $bookingEnd >= $rentalEnd)
+                ) {
 
-                for ($i = 1; $i <= $booking->quantity; $i++) {
+                    for ($i = 1; $i <= $booking->quantity; $i++) {
 
-                    $identifier = $booking->id . "_" . $i;
+                        $identifier = $booking->id . "_" . $i;
 
-                    if (!in_array($identifier, $articleArray)) {
-                        $articleArray[$identifier] = "not available";
+                        if (!in_array($identifier, $articleArray)) {
+                            $articleArray[$identifier] = "not available";
+                        }
                     }
+
+                    # BUILD RESPONSE
+                    $bookingArray[$bookingArrayCounter] = array(
+                        'ds' => json_decode($booking->optional_data),
+                        'quantity' => $booking->quantity,
+                        'rentalStart' => date("d.m.Y H:i:s", $rentalStart),
+                        'rentalEnd' => date("d.m.Y H:i:s", $rentalEnd),
+                    );
+
+                    $bookingArrayCounter++;
                 }
-
-                # BUILD RESPONSE
-                $bookingArray[$bookingArrayCounter] = array(
-                    'ds' => json_decode($booking->optional_data),
-                    'quantity' => $booking->quantity,
-                    'rentalStart' => date("d.m.Y H:i:s", $rentalStart),
-                    'rentalEnd' => date("d.m.Y H:i:s", $rentalEnd),
-                );
-
-                $bookingArrayCounter++;
             }
         }
 
