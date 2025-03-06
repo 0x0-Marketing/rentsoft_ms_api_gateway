@@ -312,7 +312,7 @@ class ConnectController extends AbstractController
         $result = $this->articleExplorer->fetch("SELECT * FROM article WHERE id = '" . $id . "'");
 
         if ($result === null) {
-            throw new NotFoundException("Article not found");
+            throw new NotFoundHttpException("Article not found");
         }
 
         $model = new Article();
@@ -969,7 +969,7 @@ class ConnectController extends AbstractController
         $result = $this->articleExplorer->fetch("SELECT * FROM settings_location WHERE id = '" . $id . "'");
 
         if ($result === null) {
-            throw new NotFoundException("Location not found");
+            throw new NotFoundHttpException("Location not found");
         }
 
         $model = new SettingsLocation();
