@@ -741,9 +741,12 @@ class ConnectController extends AbstractController
 
             $category_result = $this->articleExplorer->fetch("SELECT * FROM settings_category WHERE id = '" . $options['category'] . "'");
 
-            $sub_sql = "SELECT settings_category.id FROM settings_category 
+            if (!is_null($category_result)) {
+
+                $sub_sql = "SELECT settings_category.id FROM settings_category 
                             WHERE settings_category.lft >= " . $category_result->lft . " AND settings_category.rgt <= " . $category_result->rgt . " AND settings_category.tree_root = " . $category_result->tree_root;
-            $sql_condition .= "AND article.category_id IN (" . $sub_sql . ")";
+                $sql_condition .= "AND article.category_id IN (" . $sub_sql . ")";
+            }
         }
 
         if (isset($options['tags']) && sizeof($options['tags']) > 0) {
