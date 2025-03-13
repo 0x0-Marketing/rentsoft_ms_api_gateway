@@ -376,6 +376,7 @@ class ConnectController extends AbstractController
                 $deal->setValidEnd($deal_result->valid_end);
                 $deal->setOldRentsoftId($deal_result->old_rentsoft_id);
                 $deal->setEnabledMsOnlineBooking($deal_result->enabled_ms_online_booking);
+                $deal->setFreeKmH($deal_result->free_km_h);
 
                 $collection->add($deal);
             }
