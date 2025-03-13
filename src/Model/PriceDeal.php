@@ -13,24 +13,9 @@ class PriceDeal
     public $valid_start;
     public $valid_end;
     public $price;
+    public $free_km_h;
     public $enabled_ms_online_booking;
     public $old_rentsoft_id;
-
-    /**
-     * @return mixed
-     */
-    public function getOldRentsoftId()
-    {
-        return $this->old_rentsoft_id;
-    }
-
-    /**
-     * @param mixed $old_rentsoft_id
-     */
-    public function setOldRentsoftId($old_rentsoft_id): void
-    {
-        $this->old_rentsoft_id = $old_rentsoft_id;
-    }
 
     /**
      * @return mixed
@@ -147,6 +132,22 @@ class PriceDeal
     /**
      * @return mixed
      */
+    public function getFreeKmH()
+    {
+        return $this->free_km_h;
+    }
+
+    /**
+     * @param mixed $free_km_h
+     */
+    public function setFreeKmH($free_km_h): void
+    {
+        $this->free_km_h = $free_km_h;
+    }
+
+    /**
+     * @return mixed
+     */
     public function getEnabledMsOnlineBooking()
     {
         return $this->enabled_ms_online_booking;
@@ -158,5 +159,21 @@ class PriceDeal
     public function setEnabledMsOnlineBooking($enabled_ms_online_booking): void
     {
         $this->enabled_ms_online_booking = $enabled_ms_online_booking;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getOldRentsoftId()
+    {
+        return $this->old_rentsoft_id;
+    }
+
+    /**
+     * @param mixed $old_rentsoft_id
+     */
+    public function setOldRentsoftId($old_rentsoft_id): void
+    {
+        $this->old_rentsoft_id = $old_rentsoft_id;
     }
 }
