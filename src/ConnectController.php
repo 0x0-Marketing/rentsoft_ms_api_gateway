@@ -1780,7 +1780,8 @@ class ConnectController extends AbstractController
                                 $dealArray[] = array(
                                     'id' => $dealResult->id,
                                     'title' => $dealResult->name,
-                                    'price' => $dealResult->price
+                                    'price' => $dealResult->price,
+                                    'free_km_h' => $dealResult->free_km_h,
                                 );
                             }
                         }
@@ -1791,7 +1792,8 @@ class ConnectController extends AbstractController
                                 $dealArray[] = array(
                                     'id' => $dealResult->id,
                                     'title' => $dealResult->name,
-                                    'price' => $dealResult->price
+                                    'price' => $dealResult->price,
+                                    'free_km_h' => $dealResult->free_km_h,
                                 );
                             }
                         }
