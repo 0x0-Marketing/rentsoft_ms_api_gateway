@@ -1651,7 +1651,7 @@ class ConnectController extends AbstractController
             $rentalEndCalculation = mktime($endSplittedHourMinute[0], ($endSplittedHourMinute[1] - 1), 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
 
             $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
-            $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
+            $rentalHours = ceil(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
 
             switch ($article->getDefaultPriceCalculation()) {
 
