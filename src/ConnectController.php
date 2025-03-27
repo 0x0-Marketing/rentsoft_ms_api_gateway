@@ -307,9 +307,13 @@ class ConnectController extends AbstractController
         return $collection;
     }
 
-    public function getArticleDetail($id, $fetch_article_groups = true, $fetch_accessories = true, $fetch_images = true, $fetch_bookings = true, $fetch_location = true, $fetch_files = true, $fetch_attributes = true, $fetch_price_deals = true)
+    public function getArticleDetail($id_hash, $fetch_article_groups = true, $fetch_accessories = true, $fetch_images = true, $fetch_bookings = true, $fetch_location = true, $fetch_files = true, $fetch_attributes = true, $fetch_price_deals = true)
     {
-        $result = $this->articleExplorer->fetch("SELECT * FROM article WHERE id = '" . $id . "'");
+        if (is_numeric($id_hash)) {
+            $result = $this->articleExplorer->fetch("SELECT * FROM article WHERE id = " . $id_hash);
+        } elseif (is_string($id_hash)) {
+            $result = $this->articleExplorer->fetch("SELECT * FROM article WHERE unique_hash = '" . $id_hash . "'");
+        }
 
         if ($result === null) {
             throw new NotFoundHttpException("Article not found");
