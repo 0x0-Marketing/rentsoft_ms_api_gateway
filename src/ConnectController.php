@@ -316,6 +316,7 @@ class ConnectController extends AbstractController
         }
 
         $model = new Article();
+        $model->setUniqueHash($result->unique_hash);
         $model->setArticleId($result->article_id);
         $model->setRelevance($result->relevance);
         $model->setId($result->id);
@@ -616,6 +617,7 @@ class ConnectController extends AbstractController
 
             $model = new Article();
             $model->setArticleId($result->article_id);
+            $model->setUniqueHash($result->unique_hash);
             $model->setRelevance($result->relevance);
             $model->setId($result->id);
             $model->setClientId($result->client_id);

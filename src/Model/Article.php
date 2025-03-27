@@ -44,6 +44,7 @@ class Article
     public $possible_booking_type;
     public $tags;
     public $relevance;
+    public $unique_hash;
     public ?SettingsLocation $location = null;
     public ?ArticleGroup $article_group = null;
     public ArrayCollection $bookings;
@@ -736,5 +737,21 @@ class Article
     public function setRelevance($relevance): void
     {
         $this->relevance = $relevance;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getUniqueHash()
+    {
+        return $this->unique_hash;
+    }
+
+    /**
+     * @param mixed $unique_hash
+     */
+    public function setUniqueHash($unique_hash): void
+    {
+        $this->unique_hash = $unique_hash;
     }
 }
