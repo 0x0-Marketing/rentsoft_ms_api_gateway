@@ -1656,49 +1656,32 @@ class ConnectController extends AbstractController
 
             $article = $this->getArticleDetail($article_id, false);
 
-            $startSplitted = explode(".", date("d.m.Y", $rental_start));
-            $startSplittedHourMinute = explode(":", date("H:i", $rental_start));
-            $rentalStartCalculation = mktime($startSplittedHourMinute[0], $startSplittedHourMinute[1], 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+            if ($rental_start == 0 || $rental_end == 0) {
 
-            $endSplitted = explode(".", date("d.m.Y", $rental_end));
-            $endSplittedHourMinute = explode(":", date("H:i", $rental_end));
-            $rentalEndCalculation = mktime($endSplittedHourMinute[0], ($endSplittedHourMinute[1] - 1), 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                switch ($article->getDefaultPriceCalculation()) {
 
-            $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
-            $rentalHours = ceil(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
+                    case 10:
 
-            switch ($article->getDefaultPriceCalculation()) {
+                        $priceConfig = [];
+                        $priceConfig['calculationType'] = "";
+                        $priceConfig['calculationPriceType'] = "fix";
 
-                case 10:
+                        $priceTotal = $article->getPriceFix();
+                        break;
 
-                    $priceConfig = [];
-                    $priceConfig['calculationType'] = "";
-                    $priceConfig['calculationPriceType'] = "fix";
+                    case 5:
 
-                    $priceTotal = $article->getPriceFix();
-                    break;
-
-                case 5:
-
-                    while ($rentalStartCalculation <= $rentalEndCalculation) {
                         $priceConfig = [];
                         $priceConfig['calculationType'] = "per_day";
                         $priceConfig['calculationPriceType'] = "rates_fix_simple";
 
-                        $priceTotal += $article->getPriceFixDay();
-                        $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
-                    }
+                        $priceTotal = 0;
 
-                case 20:
+                    case 20:
 
-                    $priceConfig = [];
-                    $priceConfig['calculationType'] = "per_day";
-                    $priceConfig['calculationPriceType'] = "rates";
-
-                    while ($rentalStartCalculation <= $rentalEndCalculation) {
-
-                        $middleOfTheDay = new \DateTime();
-                        $middleOfTheDay->setTimestamp(mktime(12, 0, 0, date("m", $rentalStartCalculation), date("d", $rentalStartCalculation), date("Y", $rentalStartCalculation)));
+                        $priceConfig = [];
+                        $priceConfig['calculationType'] = "per_day";
+                        $priceConfig['calculationPriceType'] = "rates";
 
                         if ($rentsoft_customer_id === null) {
 
@@ -1714,12 +1697,97 @@ class ConnectController extends AbstractController
                                     WHERE
                                           article_price_rate__list.article_id = " . $article_id . " AND
                                           price_rate_group.enabled_ms_online_booking = true AND
-                                          price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
-                                          '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
+                                          price_rate_group.client_id = '" . $article->getClientId() . "' AND
                                           price_rate_group.default_price_rate = true AND
-                                          price_rate_group.name LIKE '%L P'");
+                                          price_rate_group.name LIKE '%L P' ORDER BY price_rate_entry.unit_price ASC");
                         } else {
                             $price_rate_result = $this->articleExplorer->fetch("
+                                    SELECT
+                                        price_rate_entry.unit_price,
+                                        price_rate_entry.unit_free,
+                                        price_rate_group.id,
+                                        price_rate_group.name
+                                    FROM price_rate_entry
+                                    LEFT JOIN price_rate_group ON price_rate_group.id = price_rate_entry.price_rate_group_id
+                                    LEFT JOIN article_price_rate__list ON article_price_rate__list.group_id = price_rate_group.id
+                                    WHERE
+                                          article_price_rate__list.article_id = " . $article_id . " AND
+                                          price_rate_group.enabled_ms_online_booking = true AND
+                                          price_rate_group.client_id = '" . $article->getClientId() . "' AND
+                                          price_rate_group.default_price_rate = true AND
+                                          price_rate_group.name LIKE '%L P'");
+                        }
+
+                        if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
+
+                            $priceTotal = $price_rate_result->unit_price;
+                            $kmhTotal = $price_rate_result->unit_free;
+                        }
+
+                        break;
+
+                    case 40:
+                        $priceConfig = [];
+                        $priceConfig['calculationType'] = "";
+                        $priceConfig['calculationPriceType'] = "fix";
+
+                        $priceTotal = ($rental_price / 100) * $article->getPercentagePriceValue();
+
+                        break;
+                }
+
+                $rentalDays = array('rentalDays' => 1, 'calculationDays' => 1);
+                $rentalHours = 24;
+                $dealArray = array();
+
+            } else {
+                $startSplitted = explode(".", date("d.m.Y", $rental_start));
+                $startSplittedHourMinute = explode(":", date("H:i", $rental_start));
+                $rentalStartCalculation = mktime($startSplittedHourMinute[0], $startSplittedHourMinute[1], 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+
+                $endSplitted = explode(".", date("d.m.Y", $rental_end));
+                $endSplittedHourMinute = explode(":", date("H:i", $rental_end));
+                $rentalEndCalculation = mktime($endSplittedHourMinute[0], ($endSplittedHourMinute[1] - 1), 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+
+                $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
+                $rentalHours = ceil(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
+
+                switch ($article->getDefaultPriceCalculation()) {
+
+                    case 10:
+
+                        $priceConfig = [];
+                        $priceConfig['calculationType'] = "";
+                        $priceConfig['calculationPriceType'] = "fix";
+
+                        $priceTotal = $article->getPriceFix();
+                        break;
+
+                    case 5:
+
+                        while ($rentalStartCalculation <= $rentalEndCalculation) {
+                            $priceConfig = [];
+                            $priceConfig['calculationType'] = "per_day";
+                            $priceConfig['calculationPriceType'] = "rates_fix_simple";
+
+                            $priceTotal += $article->getPriceFixDay();
+                            $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
+                        }
+
+                    case 20:
+
+                        $priceConfig = [];
+                        $priceConfig['calculationType'] = "per_day";
+                        $priceConfig['calculationPriceType'] = "rates";
+
+                        while ($rentalStartCalculation <= $rentalEndCalculation) {
+
+                            $middleOfTheDay = new \DateTime();
+                            $middleOfTheDay->setTimestamp(mktime(12, 0, 0, date("m", $rentalStartCalculation), date("d", $rentalStartCalculation), date("Y", $rentalStartCalculation)));
+
+                            if ($rentsoft_customer_id === null) {
+
+                                $price_rate_result = $this->articleExplorer->fetch("
                                     SELECT
                                         price_rate_entry.unit_price,
                                         price_rate_entry.unit_free,
@@ -1735,43 +1803,60 @@ class ConnectController extends AbstractController
                                           '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
                                           price_rate_group.default_price_rate = true AND
                                           price_rate_group.name LIKE '%L P'");
-                        }
-
-                        if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
-
-                            if (date("N", $rentalStartCalculation) != 7) {
-
-                                $listArray[date("d.m.Y", $rentalStartCalculation)] = $price_rate_result;
-                                $priceTotal += $price_rate_result->unit_price;
-                                $kmhTotal += $price_rate_result->unit_free;
                             } else {
-                                $rentalDays['rentalDays']--;
-                                $rentalDays['calculationDays']--;
+                                $price_rate_result = $this->articleExplorer->fetch("
+                                    SELECT
+                                        price_rate_entry.unit_price,
+                                        price_rate_entry.unit_free,
+                                        price_rate_group.id,
+                                        price_rate_group.name
+                                    FROM price_rate_entry
+                                    LEFT JOIN price_rate_group ON price_rate_group.id = price_rate_entry.price_rate_group_id
+                                    LEFT JOIN article_price_rate__list ON article_price_rate__list.group_id = price_rate_group.id
+                                    WHERE
+                                          article_price_rate__list.article_id = " . $article_id . " AND
+                                          price_rate_group.enabled_ms_online_booking = true AND
+                                          price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
+                                          '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
+                                          price_rate_group.default_price_rate = true AND
+                                          price_rate_group.name LIKE '%L P'");
                             }
+
+                            if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
+
+                                if (date("N", $rentalStartCalculation) != 7) {
+
+                                    $listArray[date("d.m.Y", $rentalStartCalculation)] = $price_rate_result;
+                                    $priceTotal += $price_rate_result->unit_price;
+                                    $kmhTotal += $price_rate_result->unit_free;
+                                } else {
+                                    $rentalDays['rentalDays']--;
+                                    $rentalDays['calculationDays']--;
+                                }
+                            }
+
+                            $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
                         }
 
-                        $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
-                    }
+                        break;
 
-                    break;
+                    case 40:
+                        $priceConfig = [];
+                        $priceConfig['calculationType'] = "";
+                        $priceConfig['calculationPriceType'] = "fix";
 
-                case 40:
-                    $priceConfig = [];
-                    $priceConfig['calculationType'] = "";
-                    $priceConfig['calculationPriceType'] = "fix";
+                        $priceTotal = ($rental_price / 100) * $article->getPercentagePriceValue();
 
-                    $priceTotal = ($rental_price / 100) * $article->getPercentagePriceValue();
+                        break;
+                }
 
-                    break;
-            }
+                # PRICE DEALS
+                $dealArray = array();
+                if ($calculate_deals_and_discounts === true) {
+                    $date = new \DateTime();
+                    $date->setTimestamp($rental_start);
 
-            # PRICE DEALS
-            $dealArray = array();
-            if ($calculate_deals_and_discounts === true) {
-                $date = new \DateTime();
-                $date->setTimestamp($rental_start);
-
-                $dealResults = $this->articleExplorer->fetchAll("
+                    $dealResults = $this->articleExplorer->fetchAll("
                             SELECT
                                 price_deal.*
                             FROM price_deal
@@ -1781,34 +1866,35 @@ class ConnectController extends AbstractController
                                   '" . $date->format("Y-m-d") . "' BETWEEN price_deal.valid_start AND price_deal.valid_end AND
                                   price_deal.enabled_ms_online_booking = true");
 
-                if (isset($dealResults) && sizeof($dealResults) >= 1) {
-                    foreach ($dealResults as $dealResult) {
+                    if (isset($dealResults) && sizeof($dealResults) >= 1) {
+                        foreach ($dealResults as $dealResult) {
 
-                        if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "time") {
+                            if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "time") {
 
-                            $startTimeSeconds = date("H", $rentalStartCalculation);
-                            $startTimeSeconds = $startTimeSeconds * 60 * 60;
-                            $startTimeSeconds = $startTimeSeconds + date("i", $rentalStartCalculation);
+                                $startTimeSeconds = date("H", $rentalStartCalculation);
+                                $startTimeSeconds = $startTimeSeconds * 60 * 60;
+                                $startTimeSeconds = $startTimeSeconds + date("i", $rentalStartCalculation);
 
-                            if ($startTimeSeconds >= $dealResult->spec10_start && $dealResult->spec10_max_hours >= $rentalHours && $dealResult->spec10_valid_days == date("N", $rental_start)) {
-                                $dealArray[] = array(
-                                    'id' => $dealResult->id,
-                                    'title' => $dealResult->name,
-                                    'price' => $dealResult->price,
-                                    'free_km_h' => $dealResult->free_km_h,
-                                );
+                                if ($startTimeSeconds >= $dealResult->spec10_start && $dealResult->spec10_max_hours >= $rentalHours && $dealResult->spec10_valid_days == date("N", $rental_start)) {
+                                    $dealArray[] = array(
+                                        'id' => $dealResult->id,
+                                        'title' => $dealResult->name,
+                                        'price' => $dealResult->price,
+                                        'free_km_h' => $dealResult->free_km_h,
+                                    );
+                                }
                             }
-                        }
 
-                        if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "length") {
+                            if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "length") {
 
-                            if ($dealResult->spec20_hour_start <= $rentalHours && $dealResult->spec20_hour_end >= $rentalHours) {
-                                $dealArray[] = array(
-                                    'id' => $dealResult->id,
-                                    'title' => $dealResult->name,
-                                    'price' => $dealResult->price,
-                                    'free_km_h' => $dealResult->free_km_h,
-                                );
+                                if ($dealResult->spec20_hour_start <= $rentalHours && $dealResult->spec20_hour_end >= $rentalHours) {
+                                    $dealArray[] = array(
+                                        'id' => $dealResult->id,
+                                        'title' => $dealResult->name,
+                                        'price' => $dealResult->price,
+                                        'free_km_h' => $dealResult->free_km_h,
+                                    );
+                                }
                             }
                         }
                     }
