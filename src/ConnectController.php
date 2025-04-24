@@ -1185,6 +1185,19 @@ class ConnectController extends AbstractController
         return $collection;
     }
 
+    public function getPossibleSizesMountainshop($article_id)
+    {
+        $results =  $this->articleExplorer->fetchAll("SELECT free_field1 FROM article_stock WHERE article_id = '" . $article_id . "' GROUP BY free_field1");
+
+        $collection = new ArrayCollection();
+
+        foreach ($results as $result) {
+            $collection->add($result->free_field1);
+        }
+
+        return $collection;
+    }
+
     public function writeArticleBooking($client_id, $article_id, $rental_start, $rental_end, $quantity = 1)
     {
         $now = new \DateTime();
