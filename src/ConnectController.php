@@ -19,6 +19,7 @@ use Rentsoft\RentsoftMsApiGateway\Model\ArticleGroupAttribute;
 use Rentsoft\RentsoftMsApiGateway\Model\ArticleGroupImage;
 use Rentsoft\RentsoftMsApiGateway\Model\ArticleGroupMinRental;
 use Rentsoft\RentsoftMsApiGateway\Model\ArticleImage;
+use Rentsoft\RentsoftMsApiGateway\Model\ArticleStock;
 use Rentsoft\RentsoftMsApiGateway\Model\Manufacturer;
 use Rentsoft\RentsoftMsApiGateway\Model\OnlineBooking;
 use Rentsoft\RentsoftMsApiGateway\Model\OnlineBookingAppearance;
@@ -1180,6 +1181,47 @@ class ConnectController extends AbstractController
             $model->setCounter($result->manufacturer_count);
 
             $collection->add($model);
+        }
+
+        return $collection;
+    }
+
+    public function getAllStocksByArticleId($article_id, $fetch_bookings = true)
+    {
+        $results = $this->articleExplorer->fetchAll("SELECT * FROM article_stock WHERE article_id = '" . $article_id . "' ORDER BY id ASC");
+        $collection = new ArrayCollection();
+
+        foreach ($results as $result) {
+            $stock = new ArticleStock();
+            $stock->setOldRentsoftId($result->old_rentsoft_id);
+            $stock->setId($result->id);
+            $stock->setStatus($result->status);
+            $stock->setDescription($result->description);
+            $stock->setFreeField1($result->free_field1);
+            $stock->setReferenceNumber($result->refrence_number);
+            $stock->setSerialCode($result->serial_code);
+
+            # BOOKING RESULTS
+            if ($fetch_bookings === true) {
+
+                $booking_results = $this->articleExplorer->fetchAll("SELECT * FROM article_booking WHERE article_stock_id = " . $result->id);
+                $collection = new ArrayCollection();
+
+                foreach ($booking_results as $booking_result) {
+
+                    $booking = new ArticleBooking();
+                    $booking->setBookingEnd($booking_result->booking_end);
+                    $booking->setBookingStart($booking_result->booking_start);
+                    $booking->setQuantity($booking_result->quantity);
+                    $booking->setOldRentsoftProcessId($booking_result->old_rentsoft_process_id);
+
+                    $collection->add($booking);
+                }
+
+                $stock->setBookings($collection);
+            }
+
+            $collection->add($stock);
         }
 
         return $collection;

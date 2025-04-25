@@ -63,6 +63,7 @@ class Article
         $this->accessories = new ArrayCollection();
         $this->price_deals = new ArrayCollection();
     }
+
     public function getMainImage()
     {
         /** @var ArticleImage $image */
