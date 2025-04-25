@@ -1205,7 +1205,7 @@ class ConnectController extends AbstractController
             if ($fetch_bookings === true) {
 
                 $booking_results = $this->articleExplorer->fetchAll("SELECT * FROM article_booking WHERE article_stock_id = " . $result->id);
-                $collection = new ArrayCollection();
+                $booking_collection = new ArrayCollection();
 
                 foreach ($booking_results as $booking_result) {
 
@@ -1215,10 +1215,10 @@ class ConnectController extends AbstractController
                     $booking->setQuantity($booking_result->quantity);
                     $booking->setOldRentsoftProcessId($booking_result->old_rentsoft_process_id);
 
-                    $collection->add($booking);
+                    $booking_collection->add($booking);
                 }
 
-                $stock->setBookings($collection);
+                $stock->setBookings($booking_collection);
             }
 
             $collection->add($stock);
