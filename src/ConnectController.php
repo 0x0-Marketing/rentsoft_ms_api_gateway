@@ -552,12 +552,17 @@ class ConnectController extends AbstractController
         }
 
         if (isset($options['searchQuery'])) {
+
+            $searchQuery = $options['searchQuery'];
+            $searchQuery = str_replace("'", "''", $searchQuery);
+            $searchQuery = strtolower($searchQuery);
+
             $sql_condition .= " AND (
-                LOWER(article.article_id) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
-                LOWER(name) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
-                LOWER(model) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
-                LOWER(model_description) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
-                LOWER(manufacturer) LIKE '%" . strtolower($options['searchQuery']) . "%') ";
+                LOWER(article.article_id) LIKE '%" . $searchQuery . "%' OR
+                LOWER(name) LIKE '%" . $searchQuery . "%' OR
+                LOWER(model) LIKE '%" . $searchQuery . "%' OR
+                LOWER(model_description) LIKE '%" . $searchQuery . "%' OR
+                LOWER(manufacturer) LIKE '%" . $searchQuery . "%') ";
         }
 
         if (isset($options['page'])) {
@@ -786,12 +791,17 @@ class ConnectController extends AbstractController
         }
 
         if (isset($options['searchQuery'])) {
+
+            $searchQuery = $options['searchQuery'];
+            $searchQuery = str_replace("'", "''", $searchQuery);
+            $searchQuery = strtolower($searchQuery);
+
             $sql_condition .= " AND (
-                LOWER(article.article_id) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
-                LOWER(name) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
-                LOWER(model) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
-                LOWER(model_description) LIKE '%" . strtolower($options['searchQuery']) . "%' OR
-                LOWER(manufacturer) LIKE '%" . strtolower($options['searchQuery']) . "%') ";
+                LOWER(article.article_id) LIKE '%" . $searchQuery . "%' OR
+                LOWER(name) LIKE '%" . $searchQuery . "%' OR
+                LOWER(model) LIKE '%" . $searchQuery . "%' OR
+                LOWER(model_description) LIKE '%" . $searchQuery . "%' OR
+                LOWER(manufacturer) LIKE '%" . $searchQuery . "%') ";
         }
 
         if (isset($options['page'])) {
@@ -1229,7 +1239,7 @@ class ConnectController extends AbstractController
 
     public function getPossibleSizesMountainshop($article_id)
     {
-        $results =  $this->articleExplorer->fetchAll("SELECT free_field1 FROM article_stock WHERE article_id = '" . $article_id . "' GROUP BY free_field1");
+        $results = $this->articleExplorer->fetchAll("SELECT free_field1 FROM article_stock WHERE article_id = '" . $article_id . "' GROUP BY free_field1");
 
         $collection = new ArrayCollection();
 
