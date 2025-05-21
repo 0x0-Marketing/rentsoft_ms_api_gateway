@@ -954,7 +954,7 @@ class ConnectController extends AbstractController
 
     public function getLocations($client_uuid)
     {
-        $results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location WHERE status = 10 AND client_id = '" . $client_uuid . "' ORDER BY name ASC");
+        $results = $this->articleExplorer->fetchAll("SELECT * FROM settings_location WHERE status = 10 AND client_id = '" . $client_uuid . "' ORDER BY priority, name ASC");
         $collection = new ArrayCollection();
 
         foreach ($results as $result) {
