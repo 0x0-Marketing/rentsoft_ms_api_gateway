@@ -1806,6 +1806,7 @@ class ConnectController extends AbstractController
                 $dealArray = array();
 
             } else {
+
                 $startSplitted = explode(".", date("d.m.Y", $rental_start));
                 $startSplittedHourMinute = explode(":", date("H:i", $rental_start));
                 $rentalStartCalculation = mktime($startSplittedHourMinute[0], $startSplittedHourMinute[1], 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
@@ -1895,8 +1896,8 @@ class ConnectController extends AbstractController
                                     $priceTotal += $price_rate_result->unit_price;
                                     $kmhTotal += $price_rate_result->unit_free;
                                 } else {
-                                    $rentalDays['rentalDays']--;
-                                    $rentalDays['calculationDays']--;
+                                   // $rentalDays['rentalDays']--;
+                                   // $rentalDays['calculationDays']--;
                                 }
                             }
 
