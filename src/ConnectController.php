@@ -1341,12 +1341,14 @@ class ConnectController extends AbstractController
                     $middleOfTheDay = new \DateTime();
                     $middleOfTheDay->setTimestamp(mktime(12, 0, 0, date("m", $rentalStartCalculation), date("d", $rentalStartCalculation), date("Y", $rentalStartCalculation)));
 
-                    $price_rate_result = $this->articleExplorer->fetch("
+                    $price_rate_result = $this->articleExplorer->fetchAll("
                             SELECT
                                 price_rate_entry.unit_price,
                                 price_rate_entry.unit_free,
                                 price_rate_group.id,
-                                price_rate_group.name
+                                price_rate_group.name,
+                                price_rate_group.last_minute_status,
+                                price_rate_group.last_minute_value
                             FROM price_rate_entry
                             LEFT JOIN price_rate_group ON price_rate_group.id = price_rate_entry.price_rate_group_id
                             LEFT JOIN article_group_price_rate__list ON article_group_price_rate__list.group_id = price_rate_group.id
@@ -1359,11 +1361,44 @@ class ConnectController extends AbstractController
                                   '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
                                   price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
-                    if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
+                    $now = time();
+                    $found = false;
 
-                        $listArray[date("d.m.Y", $rentalStartCalculation)] = $price_rate_result;
-                        $priceTotal += $price_rate_result->unit_price;
-                        $kmhTotal += $price_rate_result->unit_free;
+                    foreach ($price_rate_result as $rate)
+                    {
+                        if ($rate->last_minute_status === true)
+                        {
+                            $lastMinuteHours = $rate->last_minute_value;
+                            $limitTimestamp = $now + $lastMinuteHours * 3600;
+
+                            if ($rental_start < $limitTimestamp) {
+                                $found = true;
+                                break 1;
+                            }
+                        }
+                    }
+
+                    if ($found)
+                    {
+                        foreach ($price_rate_result as $rate)
+                        {
+                            if ($rate->last_minute_status === true)
+                            {
+                                $listArray[date("d.m.Y", $rentalStartCalculation)] = $rate;
+                                $priceTotal += $rate->unit_price;
+                                $kmhTotal += $rate->unit_free;
+                            }
+                        }
+                    } else {
+                        foreach ($price_rate_result as $rate)
+                        {
+                            if ($rate->last_minute_status === false)
+                            {
+                                $listArray[date("d.m.Y", $rentalStartCalculation)] = $rate;
+                                $priceTotal += $rate->unit_price;
+                                $kmhTotal += $rate->unit_free;
+                            }
+                        }
                     }
 
                     $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
