@@ -42,6 +42,7 @@ class Article
     public $article_value_5;
     public $article_value_6;
     public $possible_booking_type;
+    public $related_articles;
     public $tags;
     public $relevance;
     public $unique_hash;
@@ -72,6 +73,22 @@ class Article
                 return $image->getFilepath();
             }
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getRelatedArticles()
+    {
+        return $this->related_articles;
+    }
+
+    /**
+     * @param mixed $related_articles
+     */
+    public function setRelatedArticles($related_articles): void
+    {
+        $this->related_articles = $related_articles;
     }
 
     public function getPriceDeals(): ArrayCollection
