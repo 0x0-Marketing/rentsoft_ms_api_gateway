@@ -26,6 +26,7 @@ class ArticleGroup
     protected ?Collection $articles = null;
     protected ?Collection $equipments = null;
     protected ?Collection $min_rentals = null;
+    public ArrayCollection $price_deals;
 
     function __construct()
     {
@@ -35,6 +36,17 @@ class ArticleGroup
         $this->articles = new ArrayCollection();
         $this->equipments = new ArrayCollection();
         $this->min_rentals = new ArrayCollection();
+        $this->price_deals = new ArrayCollection();
+    }
+
+    public function getPriceDeals(): ArrayCollection
+    {
+        return $this->price_deals;
+    }
+
+    public function setPriceDeals(ArrayCollection $price_deals): void
+    {
+        $this->price_deals = $price_deals;
     }
 
     /**

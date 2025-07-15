@@ -168,7 +168,7 @@ class ConnectController extends AbstractController
         return $model;
     }
 
-    public function getArticleGroupDetail($id, $fetch_images = true, $fetch_attributes = true, $fetch_min_rental = true, $fetch_article = true, $fetch_accessories = true, $fetch_article_location = true, $fetch_article_bookings = true, $fetch_article_files = true, $fetch_article_attributes = true, $fetch_article_price_deals = false)
+    public function getArticleGroupDetail($id, $fetch_images = true, $fetch_attributes = true, $fetch_min_rental = true, $fetch_article = true, $fetch_accessories = true, $fetch_article_location = true, $fetch_article_bookings = true, $fetch_article_files = true, $fetch_article_attributes = true, $fetch_article_price_deals = false, $fetch_price_deals = false)
     {
         $result = $this->articleExplorer->fetch("SELECT * FROM article_group WHERE id = '" . $id . "'");
 
@@ -189,6 +189,30 @@ class ConnectController extends AbstractController
         $model->setSortByValue1($result->sort_by_value1);
         $model->setOldRentsoftId($result->old_rentsoft_id);
         $model->setMaxRentalEndTimestamp($result->max_rental_end_timestamp);
+
+        # PRICE DEALS
+        if ($fetch_price_deals === true) {
+            $deal_results = $this->articleExplorer->fetchAll("SELECT * FROM article_group_price_deal__list LEFT JOIN price_deal ON article_group_price_deal__list.deal_id = price_deal.id WHERE article_group_price_deal__list.article_group_id = '" . $result->id . "'");
+            $collection = new ArrayCollection();
+
+            foreach ($deal_results as $deal_result) {
+                $deal = new PriceDeal();
+                $deal->setName($deal_result->name);
+                $deal->setId($deal_result->id);
+                $deal->setDealBase($deal_result->deal_base);
+                $deal->setDealSpecification($deal_result->deal_specification);
+                $deal->setPrice($deal_result->price);
+                $deal->setValidStart($deal_result->valid_start);
+                $deal->setValidEnd($deal_result->valid_end);
+                $deal->setOldRentsoftId($deal_result->old_rentsoft_id);
+                $deal->setEnabledMsOnlineBooking($deal_result->enabled_ms_online_booking);
+                $deal->setFreeKmH($deal_result->free_km_h);
+
+                $collection->add($deal);
+            }
+
+            $model->setPriceDeals($collection);
+        }
 
         # IMAGES
         if ($fetch_images === true) {
@@ -1408,6 +1432,54 @@ class ConnectController extends AbstractController
                 }
             }
 
+            # PRICE DEALS
+            $dealArray = array();
+            $date = new \DateTime();
+            $date->setTimestamp($rental_start);
+
+            $dealResults = $this->articleExplorer->fetchAll("
+                            SELECT
+                                price_deal.*
+                            FROM price_deal
+                            LEFT JOIN article_group_price_deal__list ON article_group_price_deal__list.deal_id = price_deal.id
+                            WHERE
+                                  article_group_price_deal__list.article_group_id = " . $article_group_id . " AND
+                                  '" . $date->format("Y-m-d") . "' BETWEEN price_deal.valid_start AND price_deal.valid_end AND
+                                  price_deal.enabled_ms_online_booking = true");
+
+            if (isset($dealResults) && sizeof($dealResults) >= 1) {
+                foreach ($dealResults as $dealResult) {
+
+                    if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "time") {
+
+                        $startTimeSeconds = date("H", $rentalStartCalculation);
+                        $startTimeSeconds = $startTimeSeconds * 60 * 60;
+                        $startTimeSeconds = $startTimeSeconds + date("i", $rentalStartCalculation);
+
+                        if ($startTimeSeconds >= $dealResult->spec10_start && $dealResult->spec10_max_hours >= $rentalHours && $dealResult->spec10_valid_days == date("N", $rental_start)) {
+                            $dealArray[] = array(
+                                'id' => $dealResult->id,
+                                'title' => $dealResult->name,
+                                'price' => $dealResult->price,
+                                'free_km_h' => $dealResult->free_km_h,
+                            );
+                        }
+                    }
+
+                    if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "length") {
+
+                        if ($dealResult->spec20_hour_start <= $rentalHours && $dealResult->spec20_hour_end >= $rentalHours) {
+                            $dealArray[] = array(
+                                'id' => $dealResult->id,
+                                'title' => $dealResult->name,
+                                'price' => $dealResult->price,
+                                'free_km_h' => $dealResult->free_km_h,
+                            );
+                        }
+                    }
+                }
+            }
+
             $d = [];
             $d['id'] = $article_group_id;
 
@@ -1466,6 +1538,7 @@ class ConnectController extends AbstractController
             $data['rentalHours'] = $rentalHours;
             $data['calculationDays'] = $rentalDays['calculationDays'];
             $d['data'] = $data;
+            $d['deals'] = $dealArray;
 
             $returnData[] = $d;
 
