@@ -342,7 +342,7 @@ class ConnectController extends AbstractController
         }
 
         if ($result === null) {
-            throw new NotFoundHttpException("Article not found");
+            //throw new NotFoundHttpException("Article not found");
         }
 
         $model = new Article();
@@ -1462,6 +1462,8 @@ class ConnectController extends AbstractController
                                 'title' => $dealResult->name,
                                 'price' => $dealResult->price,
                                 'free_km_h' => $dealResult->free_km_h,
+                                'status_last_minute' => $dealResult->last_minute_status,
+                                'last_minute_value' => $dealResult->last_minute_value,
                             );
                         }
                     }
@@ -1474,6 +1476,8 @@ class ConnectController extends AbstractController
                                 'title' => $dealResult->name,
                                 'price' => $dealResult->price,
                                 'free_km_h' => $dealResult->free_km_h,
+                                'status_last_minute' => $dealResult->last_minute_status,
+                                'last_minute_value' => $dealResult->last_minute_value,
                             );
                         }
                     }
@@ -1729,7 +1733,9 @@ class ConnectController extends AbstractController
                                 $dealArray[] = array(
                                     'id' => $dealResult->id,
                                     'title' => $dealResult->name,
-                                    'price' => $dealResult->price
+                                    'price' => $dealResult->price,
+                                    'status_last_minute' => $dealResult->last_minute_status,
+                                    'last_minute_value' => $dealResult->last_minute_value,
                                 );
                             }
                         }
@@ -1740,7 +1746,9 @@ class ConnectController extends AbstractController
                                 $dealArray[] = array(
                                     'id' => $dealResult->id,
                                     'title' => $dealResult->name,
-                                    'price' => $dealResult->price
+                                    'price' => $dealResult->price,
+                                    'status_last_minute' => $dealResult->last_minute_status,
+                                    'last_minute_value' => $dealResult->last_minute_value,
                                 );
                             }
                         }
@@ -2058,6 +2066,8 @@ class ConnectController extends AbstractController
                                         'title' => $dealResult->name,
                                         'price' => $dealResult->price,
                                         'free_km_h' => $dealResult->free_km_h,
+                                        'status_last_minute' => $dealResult->last_minute_status,
+                                        'last_minute_value' => $dealResult->last_minute_value,
                                     );
                                 }
                             }
@@ -2070,6 +2080,8 @@ class ConnectController extends AbstractController
                                         'title' => $dealResult->name,
                                         'price' => $dealResult->price,
                                         'free_km_h' => $dealResult->free_km_h,
+                                        'status_last_minute' => $dealResult->last_minute_status,
+                                        'last_minute_value' => $dealResult->last_minute_value,
                                     );
                                 }
                             }
