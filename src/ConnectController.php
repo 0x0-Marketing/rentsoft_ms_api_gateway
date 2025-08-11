@@ -1711,12 +1711,15 @@ class ConnectController extends AbstractController
                 }
             }
 
-            # PRICE DEALS
             $dealArray = array();
+            $discountArray = array();
+
             if ($calculate_deals_and_discounts === true) {
+
                 $date = new \DateTime();
                 $date->setTimestamp($rental_start);
 
+                # PRICE DEALS
                 $dealResults = $this->articleExplorer->fetchAll("
                             SELECT
                                 price_deal.*
@@ -1759,6 +1762,25 @@ class ConnectController extends AbstractController
                                 );
                             }
                         }
+                    }
+                }
+
+                # PRICE DISCOUNTS
+                $discountResults = $this->articleExplorer->fetchAll("
+                            SELECT
+                                price_discount.*
+                            FROM price_discount
+                            LEFT JOIN article_price_discount__list ON article_price_discount__list.discount_id = price_discount.id
+                            WHERE
+                                  article_price_discount__list.article_id = " . $article_id);
+
+                if (isset($discountResults) && sizeof($discountResults) >= 1) {
+                    foreach ($discountResults as $discountResult) {
+                        $discountArray[] = array(
+                            'id' => $discountResult->id,
+                            'title' => $discountResult->name,
+                            'value' => $discountResult->discount_value,
+                        );
                     }
                 }
             }
@@ -1822,7 +1844,7 @@ class ConnectController extends AbstractController
             $data['calculationDays'] = $rentalDays['calculationDays'];
             $d['data'] = $data;
             $d['deals'] = $dealArray;
-            $d['discounts'] = array();
+            $d['discounts'] = $discountArray;
 
             $returnData[] = $d;
 
