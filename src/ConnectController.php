@@ -1393,10 +1393,8 @@ class ConnectController extends AbstractController
                     $now = time();
                     $found = false;
 
-                    foreach ($price_rate_result as $rate)
-                    {
-                        if ($rate->last_minute_status === true)
-                        {
+                    foreach ($price_rate_result as $rate) {
+                        if ($rate->last_minute_status === true) {
                             $lastMinuteHours = $rate->last_minute_value;
                             $limitTimestamp = $now + $lastMinuteHours * 3600;
 
@@ -1407,22 +1405,17 @@ class ConnectController extends AbstractController
                         }
                     }
 
-                    if ($found)
-                    {
-                        foreach ($price_rate_result as $rate)
-                        {
-                            if ($rate->last_minute_status === true)
-                            {
+                    if ($found) {
+                        foreach ($price_rate_result as $rate) {
+                            if ($rate->last_minute_status === true) {
                                 $listArray[date("d.m.Y", $rentalStartCalculation)] = $rate;
                                 $priceTotal += $rate->unit_price;
                                 $kmhTotal += $rate->unit_free;
                             }
                         }
                     } else {
-                        foreach ($price_rate_result as $rate)
-                        {
-                            if ($rate->last_minute_status === false)
-                            {
+                        foreach ($price_rate_result as $rate) {
+                            if ($rate->last_minute_status === false) {
                                 $listArray[date("d.m.Y", $rentalStartCalculation)] = $rate;
                                 $priceTotal += $rate->unit_price;
                                 $kmhTotal += $rate->unit_free;
@@ -1634,14 +1627,26 @@ class ConnectController extends AbstractController
 
                 $article = $this->getArticleDetail($article_id, false);
 
-                $startSplitted = explode(".", date("d.m.Y", $rental_start));
-                $rentalStartCalculation = mktime(10, 0, 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
 
-                $endSplitted = explode(".", date("d.m.Y", $rental_end));
-                $rentalEndCalculation = mktime(9, 59, 59, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                # EXACLT
+                if ($article->getDefaultPriceCalculationType() == 30) {
+                    $rentalStartCalculation = $rental_start;
+                    $rentalEndCalculation = $rental_end;
 
-                $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
-                $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
+                    $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
+                    $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
+                } else # PER DAY
+                {
+                    $startSplitted = explode(".", date("d.m.Y", $rental_start));
+                    $rentalStartCalculation = mktime(10, 0, 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+
+                    $endSplitted = explode(".", date("d.m.Y", $rental_end));
+                    $rentalEndCalculation = mktime(9, 59, 59, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+
+                    $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
+                    $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
+                }
+
 
                 switch ($article->getDefaultPriceCalculation()) {
 
@@ -2017,8 +2022,8 @@ class ConnectController extends AbstractController
                                     $priceTotal += $price_rate_result->unit_price;
                                     $kmhTotal += $price_rate_result->unit_free;
                                 } else {
-                                   // $rentalDays['rentalDays']--;
-                                   // $rentalDays['calculationDays']--;
+                                    // $rentalDays['rentalDays']--;
+                                    // $rentalDays['calculationDays']--;
                                 }
                             }
 
