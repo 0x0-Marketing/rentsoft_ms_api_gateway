@@ -368,6 +368,7 @@ class ConnectController extends AbstractController
         $model->setDescriptionFr($result->description_fr);
         $model->setOldRentsoftId($result->old_rentsoft_id);
         $model->setDefaultPriceCalculation($result->default_price_calculation);
+        $model->setDefaultPriceCalculationType($result->default_price_calculation_type);
         $model->setPriceFix($result->price_fix);
         $model->setPercentagePriceValue($result->percentage_price_value);
         $model->setPriceFixDay($result->price_fix_day);
@@ -674,6 +675,7 @@ class ConnectController extends AbstractController
             $model->setDescriptionFr($result->description_fr);
             $model->setOldRentsoftId($result->old_rentsoft_id);
             $model->setDefaultPriceCalculation($result->default_price_calculation);
+            $model->setDefaultPriceCalculationType($result->default_price_calculation_type);
             $model->setPriceFix($result->price_fix);
             $model->setPriceFixDay($result->price_fix_day);
             $model->setPercentagePriceValue($result->percentage_price_value);

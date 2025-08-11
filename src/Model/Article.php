@@ -35,6 +35,7 @@ class Article
     public $price_fix_day;
     public $percentage_price_value;
     public $default_price_calculation;
+    public $default_price_calculation_type;
     public $article_value_1;
     public $article_value_2;
     public $article_value_3;
@@ -73,6 +74,22 @@ class Article
                 return $image->getFilepath();
             }
         }
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getDefaultPriceCalculationType()
+    {
+        return $this->default_price_calculation_type;
+    }
+
+    /**
+     * @param mixed $default_price_calculation_type
+     */
+    public function setDefaultPriceCalculationType($default_price_calculation_type): void
+    {
+        $this->default_price_calculation_type = $default_price_calculation_type;
     }
 
     /**
