@@ -1632,7 +1632,7 @@ class ConnectController extends AbstractController
                 # EXACT
                 if ($article->getDefaultPriceCalculationType() == 30) {
                     $rentalStartCalculation = $rental_start;
-                    $rentalEndCalculation = $rental_end;
+                    $rentalEndCalculation = $rental_end - 1;
 
                     $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
                     $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
