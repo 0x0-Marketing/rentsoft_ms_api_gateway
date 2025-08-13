@@ -1599,9 +1599,11 @@ class ConnectController extends AbstractController
                             FROM price_rate_entry
                             LEFT JOIN price_rate_group ON price_rate_group.id = price_rate_entry.price_rate_group_id
                             LEFT JOIN article_price_rate__list ON article_price_rate__list.group_id = price_rate_group.id
+                            LEFT JOIN article ON article.id = article_price_rate__list.article_id
                             WHERE
                                   article_price_rate__list.article_id = " . $article_id . " AND
                                   price_rate_group.enabled_ms_online_booking = true AND
+                                  price_rate_group.client_id = article.client_id AND
                                   price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
 
                 if ($price_rate_result !== null && sizeof($price_rate_result) > 0) {
@@ -1690,9 +1692,11 @@ class ConnectController extends AbstractController
                             FROM price_rate_entry
                             LEFT JOIN price_rate_group ON price_rate_group.id = price_rate_entry.price_rate_group_id
                             LEFT JOIN article_price_rate__list ON article_price_rate__list.group_id = price_rate_group.id
+                            LEFT JOIN article ON article.id = article_price_rate__list.article_id
                             WHERE
                                   article_price_rate__list.article_id = " . $article_id . " AND
                                   price_rate_group.enabled_ms_online_booking = true AND
+                                  price_rate_group.client_id = article.client_id AND
                                   price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
                                   '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
                                   price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
