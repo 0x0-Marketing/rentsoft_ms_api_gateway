@@ -1780,6 +1780,7 @@ class ConnectController extends AbstractController
                     foreach ($discountResults as $discountResult) {
                         $discountArray[] = array(
                             'id' => $discountResult->id,
+                            'old_rentsoft_id' => $discountResult->old_rentsoft_id,
                             'title' => $discountResult->name,
                             'value' => $discountResult->discount_value,
                         );
