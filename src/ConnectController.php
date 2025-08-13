@@ -1575,7 +1575,7 @@ class ConnectController extends AbstractController
         return $response;
     }
 
-    public function calculatePriceForArticles(array $article_id_array, int $rental_start, int $rental_end, bool $calculate_deals_and_discounts = false)
+    public function calculatePriceForArticles(array $article_id_array, int $rental_start, int $rental_end, bool $calculate_deals_and_discounts = false, $default_price_sort = "ASC")
     {
         $returnData = [];
         $priceConfig = array();
@@ -1604,7 +1604,7 @@ class ConnectController extends AbstractController
                                   article_price_rate__list.article_id = " . $article_id . " AND
                                   price_rate_group.enabled_ms_online_booking = true AND
                                   price_rate_group.client_id = article.client_id AND
-                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
+                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price " . $default_price_sort);
 
                 if ($price_rate_result !== null && sizeof($price_rate_result) > 0) {
 
@@ -1629,8 +1629,7 @@ class ConnectController extends AbstractController
 
                 $article = $this->getArticleDetail($article_id, false);
 
-
-                # EXACLT
+                # EXACT
                 if ($article->getDefaultPriceCalculationType() == 30) {
                     $rentalStartCalculation = $rental_start;
                     $rentalEndCalculation = $rental_end;
@@ -1648,7 +1647,6 @@ class ConnectController extends AbstractController
                     $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
                     $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
                 }
-
 
                 switch ($article->getDefaultPriceCalculation()) {
 
@@ -1699,7 +1697,7 @@ class ConnectController extends AbstractController
                                   price_rate_group.client_id = article.client_id AND
                                   price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
                                   '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
-                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price ASC");
+                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price " . $default_price_sort);
 
                             if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
 
