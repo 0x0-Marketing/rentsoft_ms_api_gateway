@@ -1287,7 +1287,7 @@ class ConnectController extends AbstractController
                                               ((SELECT MAX(id) + 1 FROM article_booking), '" . $now->format("Y-m-d H:i:s") . "', '" . $article_id . "', '" . $client_id . "', '" . $rental_start . "', '" . $rental_end . "', '" . $quantity . "')");
     }
 
-    public function calculatePriceForArticleGroups(array $article_groups_id_array, int $rental_start, int $rental_end, string $calculation_type = "per_night")
+    public function calculatePriceForArticleGroups(array $article_groups_id_array, int $rental_start, int $rental_end, string $calculation_type = "per_night", ?array $options = array())
     {
         $returnData = [];
 
@@ -1359,6 +1359,19 @@ class ConnectController extends AbstractController
                 }
 
                 $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
+
+                if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
+
+                    $start = new \DateTime('@' . $rentalStartCalculation);
+                    $end = new \DateTime('@' . $rentalEndCalculation);
+
+                    if ((int)$end->format('H') < 8 || ((int)$end->format('H') === 8 && (int)$end->format('i') === 0)) {
+                        $rentalDays['rentalDays']--;
+                    } elseif ((int)$start->format('H') > 17 || ((int)$start->format('H') === 17 && (int)$start->format('i') > 0)) {
+                        $rentalDays['rentalDays']--;
+                    }
+                }
+
                 $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
 
                 $priceConfig = [];
