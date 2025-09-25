@@ -1363,6 +1363,7 @@ class ConnectController extends AbstractController
                 if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
 
                     $rentalEndCalculation++;
+                    $rentalEndCalculation++;
 
                     $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
 
