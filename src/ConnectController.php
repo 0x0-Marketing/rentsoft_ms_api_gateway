@@ -1362,6 +1362,10 @@ class ConnectController extends AbstractController
 
                 if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
 
+                    $rentalEndCalculation++;
+
+                    $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
+
                     $start = new \DateTime('@' . $rentalStartCalculation);
                     $end = new \DateTime('@' . $rentalEndCalculation);
 
@@ -1369,6 +1373,10 @@ class ConnectController extends AbstractController
                         $rentalDays['rentalDays']--;
                     } elseif ((int)$start->format('H') > 17 || ((int)$start->format('H') === 17 && (int)$start->format('i') > 0)) {
                         $rentalDays['rentalDays']--;
+                    }
+
+                    if ($rentalDays['rentalDays'] == 0) {
+                        $rentalDays['rentalDays'] = 1;
                     }
                 }
 
