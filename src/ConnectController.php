@@ -1451,15 +1451,17 @@ class ConnectController extends AbstractController
                     $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
                 }
 
-                $diff = $end->diff($start);
+                if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
+                    $diff = $end->diff($start);
 
-                $hoursDiff = ($diff->days * 24) + $diff->h + ($diff->i / 60);
+                    $hoursDiff = ($diff->days * 24) + $diff->h + ($diff->i / 60);
 
-                if ($hoursDiff > 24) {
-                    if ((int)$end->format('H') < 8 || ((int)$end->format('H') === 8 && (int)$end->format('i') === 0)) {
-                        $priceTotal = $priceTotal - $rate->unit_price;
-                    } elseif ((int)$start->format('H') > 17 || ((int)$start->format('H') === 17 && (int)$start->format('i') > 0)) {
-                        $priceTotal = $priceTotal - $rate->unit_price;
+                    if ($hoursDiff > 24) {
+                        if ((int)$end->format('H') < 8 || ((int)$end->format('H') === 8 && (int)$end->format('i') === 0)) {
+                            $priceTotal = $priceTotal - $rate->unit_price;
+                        } elseif ((int)$start->format('H') > 17 || ((int)$start->format('H') === 17 && (int)$start->format('i') > 0)) {
+                            $priceTotal = $priceTotal - $rate->unit_price;
+                        }
                     }
                 }
             }
