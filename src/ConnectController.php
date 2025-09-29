@@ -1372,12 +1372,15 @@ class ConnectController extends AbstractController
 
                     if ((int)$end->format('H') < 8 || ((int)$end->format('H') === 8 && (int)$end->format('i') === 0)) {
                         $rentalDays['rentalDays']--;
+                        $rentalDays['calculationDays']--;
                     } elseif ((int)$start->format('H') > 17 || ((int)$start->format('H') === 17 && (int)$start->format('i') > 0)) {
                         $rentalDays['rentalDays']--;
+                        $rentalDays['calculationDays']--;
                     }
 
                     if ($rentalDays['rentalDays'] == 0) {
                         $rentalDays['rentalDays'] = 1;
+                        $rentalDays['calculationDays'] = 1;
                     }
                 }
 
@@ -1446,6 +1449,18 @@ class ConnectController extends AbstractController
                     }
 
                     $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
+                }
+
+                $diff = $end->diff($start);
+
+                $hoursDiff = ($diff->days * 24) + $diff->h + ($diff->i / 60);
+
+                if ($hoursDiff > 24) {
+                    if ((int)$end->format('H') < 8 || ((int)$end->format('H') === 8 && (int)$end->format('i') === 0)) {
+                        $priceTotal = $priceTotal - $rate->unit_price;
+                    } elseif ((int)$start->format('H') > 17 || ((int)$start->format('H') === 17 && (int)$start->format('i') > 0)) {
+                        $priceTotal = $priceTotal - $rate->unit_price;
+                    }
                 }
             }
 
