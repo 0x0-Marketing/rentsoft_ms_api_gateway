@@ -749,6 +749,14 @@ class ConnectController extends AbstractController
                 $model->setAccessories($accessories_collection);
             }
 
+            if ($fetch_location === true)
+            {
+                if ($result->location_id !== null && $fetch_location === true) {
+                    $location = $this->getLocationDetail($result->location_id);
+                    $model->setLocation($location);
+                }
+            }
+
             $collection->add($model);
         }
 
