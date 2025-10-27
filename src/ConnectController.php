@@ -247,6 +247,8 @@ class ConnectController extends AbstractController
                 $attribute->setNameFr($attribute_result->name_fr);
                 $attribute->setType($attribute_result->type);
                 $attribute->setValue($attribute_result->value);
+                $attribute->setValueEn($attribute_result->value_en);
+                $attribute->setValueFr($attribute_result->value_fr);
                 $attribute->setIcon($attribute_result->icon);
 
                 $attribute_collection->add($attribute);

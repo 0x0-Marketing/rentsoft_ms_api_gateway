@@ -13,6 +13,8 @@ class ArticleGroupAttribute
     public $nameFr;
     public $type;
     public $value;
+    public $valueEn;
+    public $valueFr;
     public $icon;
 
     public function getId(): int
@@ -103,6 +105,38 @@ class ArticleGroupAttribute
     public function setValue($value): void
     {
         $this->value = $value;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getValueEn()
+    {
+        return $this->valueEn;
+    }
+
+    /**
+     * @param mixed $valueEn
+     */
+    public function setValueEn($valueEn): void
+    {
+        $this->valueEn = $valueEn;
+    }
+
+    /**
+     * @return mixed
+     */
+    public function getValueFr()
+    {
+        return $this->valueFr;
+    }
+
+    /**
+     * @param mixed $valueFr
+     */
+    public function setValueFr($valueFr): void
+    {
+        $this->valueFr = $valueFr;
     }
 
     /**
