@@ -2090,14 +2090,34 @@ class ConnectController extends AbstractController
 
                             if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
 
-                                if (date("N", $rentalStartCalculation) != 7) {
+                                $disabledDays = array(
+                                    '18.04.2025',
+                                    '21.04.2025',
+                                    '01.05.2025',
+                                    '29.05.2025',
+                                    '09.06.2025',
+                                    '19.06.2025',
+                                    '03.10.2025',
+                                    '01.11.2025',
+                                    '25.12.2025',
+                                    '26.12.2025',
+                                    '01.01.2026',
+                                    '03.04.2026',
+                                    '06.04.2026',
+                                    '01.05.2026',
+                                    '14.05.2026',
+                                    '25.05.2026',
+                                    '04.06.2026',
+                                    '03.10.2026',
+                                    '25.12.2026',
+                                    '26.12.2026'
+                                );
+
+                                if (date("N", $rentalStartCalculation) != 7 && !in_array(date("d.m.Y", $rentalStartCalculation), $disabledDays)) {
 
                                     $listArray[date("d.m.Y", $rentalStartCalculation)] = $price_rate_result;
                                     $priceTotal += $price_rate_result->unit_price;
                                     $kmhTotal += $price_rate_result->unit_free;
-                                } else {
-                                    // $rentalDays['rentalDays']--;
-                                    // $rentalDays['calculationDays']--;
                                 }
                             }
 
