@@ -112,7 +112,11 @@ class ArticleGroupAttribute
      */
     public function getValueEn()
     {
-        return $this->valueEn;
+        if ($this->valueEn == null) {
+            return $this->value;
+        } else {
+            return $this->valueEn;
+        }
     }
 
     /**
@@ -128,7 +132,11 @@ class ArticleGroupAttribute
      */
     public function getValueFr()
     {
-        return $this->valueFr;
+        if ($this->valueFr == null) {
+            return $this->value;
+        } else {
+            return $this->valueFr;
+        }
     }
 
     /**
