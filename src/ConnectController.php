@@ -149,6 +149,7 @@ class ConnectController extends AbstractController
             $openTime->setDefaultTime($result->default_time);
             $openTime->setTakeoverTakeback($result->takeover_takeback);
             $openTime->setRentalTime($result->rental_time);
+            $openTime->setOldRentsoftLocationId($result->old_rentsoft_location_id);
             $openTime->setDay($result->day);
 
             $model->getSettingsOpenTimes()->add($openTime);

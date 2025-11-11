@@ -8,6 +8,17 @@ class OnlineBookingOpenTime
     public string $takeoverTakeback;
     public string $rentalTime;
     public string $defaultTime;
+    public int $oldRentsoftLocationId;
+
+    public function getOldRentsoftLocationId(): int
+    {
+        return $this->oldRentsoftLocationId;
+    }
+
+    public function setOldRentsoftLocationId(int $oldRentsoftLocationId): void
+    {
+        $this->oldRentsoftLocationId = $oldRentsoftLocationId;
+    }
 
     public function getDay(): int
     {
