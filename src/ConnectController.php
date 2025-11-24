@@ -1371,15 +1371,13 @@ class ConnectController extends AbstractController
 
                 $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
 
+                # KOELNER FLITZER
                 if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
-
-                    $rentalEndCalculation++;
-                    $rentalEndCalculation++;
 
                     $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
 
-                    $start = new \DateTime('@' . $rentalStartCalculation);
-                    $end = new \DateTime('@' . $rentalEndCalculation);
+                    $start = new \DateTime('@' . $rental_start);
+                    $end = new \DateTime('@' . $rental_end);
 
                     if ((int)$end->format('H') < 8 || ((int)$end->format('H') === 8 && (int)$end->format('i') === 0)) {
                         $rentalDays['rentalDays']--;
@@ -1463,8 +1461,8 @@ class ConnectController extends AbstractController
                 }
 
                 if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
-                    $diff = $end->diff($start);
 
+                    $diff = $end->diff($start);
                     $hoursDiff = ($diff->days * 24) + $diff->h + ($diff->i / 60);
 
                     if ($hoursDiff > 24) {
@@ -2269,7 +2267,7 @@ class ConnectController extends AbstractController
 
         while ($rental_start_calculation <= $rental_end) {
             $rental_days++;
-            $rental_start_calculation = strtotime("+1 day", $rental_start_calculation);
+            $rental_start_calculation += (60 * 60 * 24);
         }
 
         $calculation_days = $rental_days;
