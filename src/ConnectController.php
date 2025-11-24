@@ -457,7 +457,7 @@ class ConnectController extends AbstractController
 
         # ATTRIBUTES
         if ($fetch_attributes === true) {
-            $attribute_results = $this->articleExplorer->fetchAll("SELECT * FROM article_attribute WHERE article_id = '" . $result->id . "'");
+            $attribute_results = $this->articleExplorer->fetchAll("SELECT * FROM article_attribute WHERE article_id = '" . $result->id . "' ORDER BY priority ASC");
             $attribute_collection = new ArrayCollection();
 
             foreach ($attribute_results as $attribute_result) {
@@ -711,7 +711,7 @@ class ConnectController extends AbstractController
             }
 
             if ($fetch_attributes === true) {
-                $attribute_results = $this->articleExplorer->fetchAll("SELECT * FROM article_attribute WHERE article_id = '" . $result->id . "'");
+                $attribute_results = $this->articleExplorer->fetchAll("SELECT * FROM article_attribute WHERE article_id = '" . $result->id . "' ORDER BY priority ASC");
                 $attribute_collection = new ArrayCollection();
 
                 foreach ($attribute_results as $attribute_result) {
