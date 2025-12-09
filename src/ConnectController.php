@@ -905,6 +905,133 @@ class ConnectController extends AbstractController
         return $collection;
     }
 
+    public function countArticles(array $options): int
+    {
+        $sql_condition = null;
+        $inner_join = null;
+
+        if (isset($options['location'])) {
+            $sql_condition .= " AND location_id = '" . $options['location'] . "'";
+        }
+
+        if (isset($options['articleGroup'])) {
+            $sql_condition .= " AND article_group_id = '" . $options['articleGroup'] . "'";
+        }
+
+        if (isset($options['oldRentsoftId'])) {
+            $sql_condition .= " AND old_rentsoft_id = '" . $options['oldRentsoftId'] . "'";
+        }
+
+        if (isset($options['articleType'])) {
+            $sql_condition .= " AND article_type = '" . $options['articleType'] . "'";
+        }
+
+        if (isset($options['manufacturer'])) {
+            $sql_condition .= " AND manufacturer = '" . $options['manufacturer'] . "'";
+        }
+
+        if (isset($options['category'])) {
+
+            $category_result = $this->articleExplorer->fetch(
+                "SELECT * FROM settings_category WHERE id = '" . $options['category'] . "'"
+            );
+
+            if (!is_null($category_result)) {
+                $sub_sql = "SELECT settings_category.id FROM settings_category 
+                        WHERE settings_category.lft >= " . $category_result->lft . " 
+                          AND settings_category.rgt <= " . $category_result->rgt . " 
+                          AND settings_category.tree_root = " . $category_result->tree_root;
+
+                $sql_condition .= " AND article.category_id IN (" . $sub_sql . ")";
+            }
+        }
+
+        if (isset($options['tags']) && sizeof($options['tags']) > 0) {
+
+            $sql_condition .= " AND (";
+
+            foreach ($options['tags'] as $tag_group) {
+                foreach ($tag_group as $tag) {
+                    $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
+                }
+
+                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
+                $sql_condition .= " AND ";
+            }
+
+            $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
+            $sql_condition .= ")";
+        }
+
+        if (isset($options['searchQuery'])) {
+
+            $searchQuery = $options['searchQuery'];
+            $searchQuery = str_replace("'", "''", $searchQuery);
+            $searchQuery = strtolower($searchQuery);
+
+            $sql_condition .= " AND (
+            LOWER(article.article_id) LIKE '%" . $searchQuery . "%' OR
+            LOWER(name) LIKE '%" . $searchQuery . "%' OR
+            LOWER(model) LIKE '%" . $searchQuery . "%' OR
+            LOWER(model_description) LIKE '%" . $searchQuery . "%' OR
+            LOWER(manufacturer) LIKE '%" . $searchQuery . "%'
+        ) ";
+        }
+
+        if (isset($options['online_booking_id'])) {
+            $inner_join = "INNER JOIN microservice_article_online_booking 
+                       ON microservice_article_online_booking.article_id = article.id";
+            $sql_condition .= " AND microservice_article_online_booking.ms_online_booking_id = '" . $options['online_booking_id'] . "'";
+        }
+
+        if (isset($options['rentalDates'])) {
+
+            $start = new \DateTime();
+            $start->setTimestamp($options['rentalDates']['rentalStart']);
+
+            $end = new \DateTime();
+            $end->setTimestamp($options['rentalDates']['rentalEnd']);
+
+            $sub_sql = "SELECT article.id 
+                    FROM article_booking 
+                    INNER JOIN article ON article.id = article_booking.article_id 
+                    WHERE
+                        (
+                            (booking_start BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
+                            (booking_end BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
+                            (
+                                (booking_start <= '" . $start->format("Y-m-d H:i:s") . "' ) AND
+                                (booking_end >=  '" . $end->format("Y-m-d H:i:s") . "')
+                            )
+                        )
+                    GROUP BY article.id 
+                    HAVING SUM(article_booking.quantity) >= article.quantity";
+
+            $sql_condition .= " AND article.id NOT IN (" . $sub_sql . ")";
+        }
+
+        // Wichtig: über Subquery zählen, damit GROUP BY / JOIN korrekt behandelt werden
+        $countSql = "
+        SELECT COUNT(*) AS cnt
+        FROM (
+            SELECT article.id
+            FROM article
+            {$inner_join}
+            WHERE client_id = '" . $options['client_id'] . "'
+            {$sql_condition}
+            GROUP BY article.id
+        ) x
+    ";
+
+        $row = $this->articleExplorer->fetch($countSql);
+
+        // fetch(...) liefert bei dir offenbar ein einzelnes Ergebnisobjekt (wie bei category_result)
+        return (int) ($row->cnt ?? 0);
+    }
+
     public function getAvailability($article_id, $rental_start, $rental_end)
     {
         $rentalStart = $rental_start;
