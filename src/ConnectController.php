@@ -345,7 +345,7 @@ class ConnectController extends AbstractController
         }
 
         if ($result === null) {
-            //throw new NotFoundHttpException("Article not found");
+            throw new NotFoundHttpException("Article not found");
         }
 
         $model = new Article();
