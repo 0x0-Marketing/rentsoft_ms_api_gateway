@@ -2106,7 +2106,7 @@ class ConnectController extends AbstractController
                                           price_rate_group.enabled_ms_online_booking = true AND
                                           price_rate_group.client_id = '" . $article->getClientId() . "' AND
                                           price_rate_group.default_price_rate = true AND
-                                          price_rate_group.name LIKE '%L P'");
+                                          price_rate_group.name LIKE '%L P' ORDER BY price_rate_entry.unit_price ASC");
                         }
 
                         if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
