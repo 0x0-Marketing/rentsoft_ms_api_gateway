@@ -1626,7 +1626,7 @@ class ConnectController extends AbstractController
                         $startTimeSeconds = $startTimeSeconds * 60 * 60;
                         $startTimeSeconds = $startTimeSeconds + date("i", $rentalStartCalculation);
 
-                        if ($startTimeSeconds >= $dealResult->spec10_start && $dealResult->spec10_max_hours >= $rentalHours && $dealResult->spec10_valid_days == date("N", $rental_start)) {
+                        if ($startTimeSeconds >= $dealResult->spec10_start && $dealResult->spec10_max_hours >= $rentalHours && in_array(date("N", $rental_start), explode(",", $dealResult->spec10_valid_days))) {
                             $dealArray[] = array(
                                 'id' => $dealResult->id,
                                 'title' => $dealResult->name,
