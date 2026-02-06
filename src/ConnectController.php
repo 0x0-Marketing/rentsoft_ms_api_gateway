@@ -752,8 +752,7 @@ class ConnectController extends AbstractController
                 $model->setAccessories($accessories_collection);
             }
 
-            if ($fetch_location === true)
-            {
+            if ($fetch_location === true) {
                 if ($result->location_id !== null && $fetch_location === true) {
                     $location = $this->getLocationDetail($result->location_id);
                     $model->setLocation($location);
@@ -1029,7 +1028,7 @@ class ConnectController extends AbstractController
         $row = $this->articleExplorer->fetch($countSql);
 
         // fetch(...) liefert bei dir offenbar ein einzelnes Ergebnisobjekt (wie bei category_result)
-        return (int) ($row->cnt ?? 0);
+        return (int)($row->cnt ?? 0);
     }
 
     public function getAvailability($article_id, $rental_start, $rental_end)
@@ -1518,6 +1517,14 @@ class ConnectController extends AbstractController
                         $rentalDays['rentalDays'] = 1;
                         $rentalDays['calculationDays'] = 1;
                     }
+
+                    if ($rentalDays['rentalDays'] < 0) {
+                        $rentalDays['rentalDays'] = 0;
+                    }
+
+                    if ($rentalDays['calculationDays'] < 0) {
+                        $rentalDays['calculationDays'] = 0;
+                    }
                 }
 
                 $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
@@ -1616,6 +1623,14 @@ class ConnectController extends AbstractController
                                   article_group_price_deal__list.article_group_id = " . $article_group_id . " AND
                                   '" . $date->format("Y-m-d") . "' BETWEEN price_deal.valid_start AND price_deal.valid_end AND
                                   price_deal.enabled_ms_online_booking = true");
+
+            if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
+                $startSplitted = explode(".", date("d.m.Y", $rental_start));
+                $rentalStartCalculation = mktime(10, 0, 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+
+                $endSplitted = explode(".", date("d.m.Y", $rental_end));
+                $rentalEndCalculation = mktime(9, 59, 59, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+            }
 
             if (isset($dealResults) && sizeof($dealResults) >= 1) {
                 foreach ($dealResults as $dealResult) {
@@ -1724,7 +1739,8 @@ class ConnectController extends AbstractController
         return $response;
     }
 
-    public function calculatePriceForArticleGroupList($article_group_id)
+    public
+    function calculatePriceForArticleGroupList($article_group_id)
     {
         $price_rate_result = $this->articleExplorer->fetchAll("
                             SELECT
@@ -1750,7 +1766,8 @@ class ConnectController extends AbstractController
         return $response;
     }
 
-    public function calculatePriceForArticles(array $article_id_array, int $rental_start, int $rental_end, bool $calculate_deals_and_discounts = false, $default_price_sort = "ASC")
+    public
+    function calculatePriceForArticles(array $article_id_array, int $rental_start, int $rental_end, bool $calculate_deals_and_discounts = false, $default_price_sort = "ASC")
     {
         $returnData = [];
         $priceConfig = array();
@@ -2034,7 +2051,8 @@ class ConnectController extends AbstractController
         return $response;
     }
 
-    public function calculatePriceForArticlesFassbender(array $article_id_array, int $rental_start, int $rental_end, bool $calculate_deals_and_discounts = false, $rentsoft_customer_id = null, $rental_price = null)
+    public
+    function calculatePriceForArticlesFassbender(array $article_id_array, int $rental_start, int $rental_end, bool $calculate_deals_and_discounts = false, $rentsoft_customer_id = null, $rental_price = null)
     {
         $returnData = [];
 
@@ -2388,7 +2406,8 @@ class ConnectController extends AbstractController
         return $response;
     }
 
-    private function calculateRentalDays(int $rental_start_calculation, int $rental_end): array
+    private
+    function calculateRentalDays(int $rental_start_calculation, int $rental_end): array
     {
         $rental_days = 0;
 
