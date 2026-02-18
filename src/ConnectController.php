@@ -1634,10 +1634,13 @@ class ConnectController extends AbstractController
 
             if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
                 $startSplitted = explode(".", date("d.m.Y", $rental_start));
-                $rentalStartCalculation = mktime(10, 0, 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+                $startTimeSplitted = explode(":", date("H:i", $rental_start));
+                $rentalStartCalculation = mktime($startTimeSplitted[0], $startTimeSplitted[1], 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
 
                 $endSplitted = explode(".", date("d.m.Y", $rental_end));
-                $rentalEndCalculation = mktime(9, 59, 59, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                $endTimeSplitted = explode(":", date("H:i", $rental_end));
+                $rentalEndCalculation = mktime($endTimeSplitted[0], $endTimeSplitted[1], 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                $rentalEndCalculation--;
             }
 
             if (isset($dealResults) && sizeof($dealResults) >= 1) {
