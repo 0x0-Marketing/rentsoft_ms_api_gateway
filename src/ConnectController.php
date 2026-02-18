@@ -1495,6 +1495,14 @@ class ConnectController extends AbstractController
                     $rentalEndCalculation--;
                 }
 
+                if ($calculation_type == "per_day") {
+                    $startSplitted = explode(".", date("d.m.Y", $rental_start));
+                    $rentalStartCalculation = mktime(10, 0, 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+
+                    $endSplitted = explode(".", date("d.m.Y", $rental_end));
+                    $rentalEndCalculation = mktime(10, 0, 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                }
+
                 $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
 
                 # KOELNER FLITZER
