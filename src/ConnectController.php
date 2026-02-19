@@ -1500,15 +1500,13 @@ class ConnectController extends AbstractController
                     $rentalStartCalculation = mktime(10, 0, 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
 
                     $endSplitted = explode(".", date("d.m.Y", $rental_end));
-                    $rentalEndCalculation = mktime(10, 0, 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                    $rentalEndCalculation = mktime(10, 0, 1, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
                 }
 
                 $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
 
                 # KOELNER FLITZER
                 if (isset($options['client_id']) && $options['client_id'] == "0e37f679-f6cd-42ed-bc70-d86f17c0284d") {
-
-                    $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
 
                     $start = new \DateTime('@' . $rental_start);
                     $end = new \DateTime('@' . $rental_end);
