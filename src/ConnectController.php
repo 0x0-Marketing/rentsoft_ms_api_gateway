@@ -1641,6 +1641,8 @@ class ConnectController extends AbstractController
                 $endTimeSplitted = explode(":", date("H:i", $rental_end));
                 $rentalEndCalculation = mktime($endTimeSplitted[0], $endTimeSplitted[1], 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
                 $rentalEndCalculation--;
+
+                $rentalHours = round(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
             }
 
             if (isset($dealResults) && sizeof($dealResults) >= 1) {
