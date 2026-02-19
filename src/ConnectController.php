@@ -1608,8 +1608,10 @@ class ConnectController extends AbstractController
                     if ($hoursDiff > 24) {
                         if ((int)$end->format('H') < 8 || ((int)$end->format('H') === 8 && (int)$end->format('i') === 0)) {
                             $priceTotal = $priceTotal - $rate->unit_price;
+                            $kmhTotal = $kmhTotal - $rate->unit_free;
                         } elseif ((int)$start->format('H') > 17 || ((int)$start->format('H') === 17 && (int)$start->format('i') > 0)) {
                             $priceTotal = $priceTotal - $rate->unit_price;
+                            $kmhTotal = $kmhTotal - $rate->unit_free;
                         }
                     }
                 }
