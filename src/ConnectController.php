@@ -2167,14 +2167,43 @@ class ConnectController extends AbstractController
             } else {
 
                 $startSplitted = explode(".", date("d.m.Y", $rental_start));
-                $startSplittedHourMinute = explode(":", date("H:i", $rental_start));
-                $rentalStartCalculation = mktime($startSplittedHourMinute[0], $startSplittedHourMinute[1], 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+                $startTimeSplitted = explode(":", date("H:i", $rental_start));
+                $rentalStartCalculation = mktime($startTimeSplitted[0], $startTimeSplitted[1], 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
 
                 $endSplitted = explode(".", date("d.m.Y", $rental_end));
-                $endSplittedHourMinute = explode(":", date("H:i", $rental_end));
-                $rentalEndCalculation = mktime($endSplittedHourMinute[0], ($endSplittedHourMinute[1] - 1), 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                $endTimeSplitted = explode(":", date("H:i", $rental_end));
+                $rentalEndCalculation = mktime($endTimeSplitted[0], $endTimeSplitted[1], 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+                $rentalEndCalculation--;
 
-                $rentalDays = $this->calculateRentalDays($rentalStartCalculation, $rentalEndCalculation);
+//                $startSplitted = explode(".", date("d.m.Y", $rental_start));
+//                $startSplittedHourMinute = explode(":", date("H:i", $rental_start));
+//                $rentalStartCalculation = mktime($startSplittedHourMinute[0], $startSplittedHourMinute[1], 0, $startSplitted[1], $startSplitted[0], $startSplitted[2]);
+//
+//                $endSplitted = explode(".", date("d.m.Y", $rental_end));
+//                $endSplittedHourMinute = explode(":", date("H:i", $rental_end));
+//                $rentalEndCalculation = mktime($endSplittedHourMinute[0], ($endSplittedHourMinute[1] - 1), 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
+
+
+                # RENTAL DAYS
+                $rental_days = 0;
+                $rental_start_calculation = $rentalStartCalculation;
+
+                while ($rental_start_calculation <= $rental_end) {
+
+                    $rental_days++;
+                    $rental_start_calculation += (60 * 60 * 24);
+
+                    if (date("N", $rental_start_calculation) == 7) {
+                        $rental_days--;
+                    }
+                }
+
+                $calculation_days = $rental_days;
+                $rentalDays = [
+                    'rentalDays' => $rental_days,
+                    'calculationDays' => $calculation_days,
+                ];
+                
                 $rentalHours = ceil(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
 
                 switch ($article->getDefaultPriceCalculation()) {
