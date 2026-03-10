@@ -2183,6 +2183,28 @@ class ConnectController extends AbstractController
 //                $endSplittedHourMinute = explode(":", date("H:i", $rental_end));
 //                $rentalEndCalculation = mktime($endSplittedHourMinute[0], ($endSplittedHourMinute[1] - 1), 0, $endSplitted[1], $endSplitted[0], $endSplitted[2]);
 
+                $disabledDays = array(
+                    '18.04.2025',
+                    '21.04.2025',
+                    '01.05.2025',
+                    '29.05.2025',
+                    '09.06.2025',
+                    '19.06.2025',
+                    '03.10.2025',
+                    '01.11.2025',
+                    '25.12.2025',
+                    '26.12.2025',
+                    '01.01.2026',
+                    '03.04.2026',
+                    '06.04.2026',
+                    '01.05.2026',
+                    '14.05.2026',
+                    '25.05.2026',
+                    '04.06.2026',
+                    '03.10.2026',
+                    '25.12.2026',
+                    '26.12.2026'
+                );
 
                 # RENTAL DAYS
                 $rental_days = 0;
@@ -2196,6 +2218,10 @@ class ConnectController extends AbstractController
                     if (date("N", $rental_start_calculation) == 7) {
                         $rental_days--;
                     }
+
+                    if (in_array(date("d.m.Y", $rental_start_calculation), $disabledDays)) {
+                        $rental_days--;
+                    }
                 }
 
                 $calculation_days = $rental_days;
@@ -2203,7 +2229,7 @@ class ConnectController extends AbstractController
                     'rentalDays' => $rental_days,
                     'calculationDays' => $calculation_days,
                 ];
-                
+
                 $rentalHours = ceil(($rentalEndCalculation - $rentalStartCalculation) / 60 / 60);
 
                 switch ($article->getDefaultPriceCalculation()) {
@@ -2279,29 +2305,6 @@ class ConnectController extends AbstractController
                             }
 
                             if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
-
-                                $disabledDays = array(
-                                    '18.04.2025',
-                                    '21.04.2025',
-                                    '01.05.2025',
-                                    '29.05.2025',
-                                    '09.06.2025',
-                                    '19.06.2025',
-                                    '03.10.2025',
-                                    '01.11.2025',
-                                    '25.12.2025',
-                                    '26.12.2025',
-                                    '01.01.2026',
-                                    '03.04.2026',
-                                    '06.04.2026',
-                                    '01.05.2026',
-                                    '14.05.2026',
-                                    '25.05.2026',
-                                    '04.06.2026',
-                                    '03.10.2026',
-                                    '25.12.2026',
-                                    '26.12.2026'
-                                );
 
                                 if (date("N", $rentalStartCalculation) != 7 && !in_array(date("d.m.Y", $rentalStartCalculation), $disabledDays)) {
 
