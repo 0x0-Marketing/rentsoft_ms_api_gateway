@@ -2123,6 +2123,8 @@ class ConnectController extends AbstractController
                                           price_rate_group.default_price_rate = true AND
                                           price_rate_group.name LIKE '%L P' ORDER BY price_rate_entry.unit_price ASC");
                         } else {
+                            $priceGroups = implode(",", $rentsoft_customer_id['relatedPriceGroups']);
+
                             $price_rate_result = $this->articleExplorer->fetch("
                                     SELECT
                                         price_rate_entry.unit_price,
@@ -2137,7 +2139,7 @@ class ConnectController extends AbstractController
                                           price_rate_group.enabled_ms_online_booking = true AND
                                           price_rate_group.client_id = '" . $article->getClientId() . "' AND
                                           price_rate_group.default_price_rate = true AND
-                                          price_rate_group.name LIKE '%L P' ORDER BY price_rate_entry.unit_price ASC");
+                                          price_rate_group.old_rentsoft_id IN (" . $priceGroups . ")");
                         }
 
                         if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
@@ -2227,6 +2229,8 @@ class ConnectController extends AbstractController
                                           price_rate_group.default_price_rate = true AND
                                           price_rate_group.name LIKE '%L P'");
                             } else {
+                                $priceGroups = implode(",", $rentsoft_customer_id['relatedPriceGroups']);
+
                                 $price_rate_result = $this->articleExplorer->fetch("
                                     SELECT
                                         price_rate_entry.unit_price,
@@ -2242,7 +2246,7 @@ class ConnectController extends AbstractController
                                           price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
                                           '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
                                           price_rate_group.default_price_rate = true AND
-                                          price_rate_group.name LIKE '%L P'");
+                                          price_rate_group.old_rentsoft_id IN (".$priceGroups.")");
                             }
 
                             if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
