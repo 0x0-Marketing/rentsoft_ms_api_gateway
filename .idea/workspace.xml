@@ -5,9 +5,9 @@
   </component>
   <component name="ChangeListManager">
     <list default="true" id="4ded7184-5c53-46ec-a222-97ae0b273aa1" name="Changes" comment="">
-      <change beforePath="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api/.idea/rentsoft_ms_bluetomato_api.iml" beforeDir="false" afterPath="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api/.idea/rentsoft_ms_bluetomato_api.iml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api/web/composer.lock" beforeDir="false" afterPath="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api/web/composer.lock" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api/web/src/Controller/ArticleController.php" beforeDir="false" afterPath="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api/web/src/Controller/ArticleController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/php.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/php.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/src/ConnectController.php" beforeDir="false" afterPath="$PROJECT_DIR$/src/ConnectController.php" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api/.idea/workspace.xml" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -24,7 +24,7 @@
     <execution />
   </component>
   <component name="Git.Settings">
-    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/../rentsoft_ms_bluetomato_api" />
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
   </component>
   <component name="PhpWorkspaceProjectConfiguration" interpreter_name="/opt/homebrew/Cellar/php/8.3.7/bin/php">
     <include_path>
@@ -115,8 +115,8 @@
   <component name="SharedIndexes">
     <attachedChunks>
       <set>
-        <option value="bundled-js-predefined-1d06a55b98c1-74d2a5396914-JavaScript-PS-241.14494.237" />
-        <option value="bundled-php-predefined-ba97393d7c68-8f0632a2a215-com.jetbrains.php.sharedIndexes-PS-241.14494.237" />
+        <option value="bundled-js-predefined-d6986cc7102b-1632447f56bf-JavaScript-PS-243.26053.13" />
+        <option value="bundled-php-predefined-a98d8de5180a-1ec7b7818973-com.jetbrains.php.sharedIndexes-PS-243.26053.13" />
       </set>
     </attachedChunks>
   </component>
@@ -130,10 +130,19 @@
       <updated>1728035546506</updated>
       <workItem from="1728035547522" duration="740000" />
       <workItem from="1732281620690" duration="77000" />
+      <workItem from="1773313516925" duration="226000" />
     </task>
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
     <option name="version" value="3" />
+  </component>
+  <component name="github-copilot-workspace">
+    <instructionFileLocations>
+      <option value=".github/instructions" />
+    </instructionFileLocations>
+    <promptFileLocations>
+      <option value=".github/prompts" />
+    </promptFileLocations>
   </component>
 </project>

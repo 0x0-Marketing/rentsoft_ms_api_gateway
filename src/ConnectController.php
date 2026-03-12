@@ -1605,7 +1605,7 @@ class ConnectController extends AbstractController
                     $diff = $end->diff($start);
                     $hoursDiff = ($diff->days * 24) + $diff->h + ($diff->i / 60);
 
-                    if ($hoursDiff > 24) {
+                    if ($hoursDiff >= 24) {
                         if ((int)$end->format('H') < 8 || ((int)$end->format('H') === 8 && (int)$end->format('i') === 0)) {
                             $priceTotal = $priceTotal - $rate->unit_price;
                             $kmhTotal = $kmhTotal - $rate->unit_free;
