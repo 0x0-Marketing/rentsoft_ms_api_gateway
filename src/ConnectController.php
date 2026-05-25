@@ -1668,9 +1668,9 @@ class ConnectController extends AbstractController
 
                     if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "length") {
 
-                        if ($dealResult->spec20_valid_hours != "" && $dealResult->spec20_valid_hours !== null) {
+                        if ($dealResult->spec20_valid_days != "" && $dealResult->spec20_valid_days !== null) {
 
-                            if (in_array(date("N", $rentalStartCalculation), explode(",", $dealResult->spec20_valid_day))) {
+                            if (in_array(date("N", $rentalStartCalculation), explode(",", $dealResult->spec20_valid_days))) {
                                 $dealArray[] = array(
                                     'id' => $dealResult->id,
                                     'title' => $dealResult->name,
