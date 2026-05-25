@@ -1668,7 +1668,21 @@ class ConnectController extends AbstractController
 
                     if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "length") {
 
-                        if ($dealResult->spec20_hour_start <= $rentalHours && $dealResult->spec20_hour_end >= $rentalHours) {
+                        if ($dealResult->spec20_valid_hours != "" && $dealResult->spec20_valid_hours !== null) {
+
+                            if (in_array(date("N", $rentalStartCalculation), explode(",", $dealResult->spec20_valid_day))) {
+                                $dealArray[] = array(
+                                    'id' => $dealResult->id,
+                                    'title' => $dealResult->name,
+                                    'price' => $dealResult->price,
+                                    'free_km_h' => $dealResult->free_km_h,
+                                    'status_last_minute' => $dealResult->last_minute_status,
+                                    'last_minute_value' => $dealResult->last_minute_value,
+                                );
+                            }
+
+                        } else {
+
                             $dealArray[] = array(
                                 'id' => $dealResult->id,
                                 'title' => $dealResult->name,
@@ -2301,7 +2315,7 @@ class ConnectController extends AbstractController
                                           price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
                                           '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
                                           price_rate_group.default_price_rate = true AND
-                                          price_rate_group.old_rentsoft_id IN (".$priceGroups.")");
+                                          price_rate_group.old_rentsoft_id IN (" . $priceGroups . ")");
                             }
 
                             if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
@@ -2354,7 +2368,7 @@ class ConnectController extends AbstractController
                                 $startTimeSeconds = $startTimeSeconds * 60 * 60;
                                 $startTimeSeconds = $startTimeSeconds + date("i", $rentalStartCalculation);
 
-                                if ($startTimeSeconds >= $dealResult->spec10_start && $dealResult->spec10_max_hours >= $rentalHours && $dealResult->spec10_valid_days == date("N", $rental_start)) {
+                                if ($startTimeSeconds >= $dealResult->spec10_start && $dealResult->spec10_max_hours >= $rentalHours && in_array(date("N", $rental_start), explode(",", $dealResult->spec10_valid_days))) {
                                     $dealArray[] = array(
                                         'id' => $dealResult->id,
                                         'title' => $dealResult->name,
@@ -2369,14 +2383,31 @@ class ConnectController extends AbstractController
                             if ($dealResult->deal_base == "hour" && $dealResult->deal_specification == "length") {
 
                                 if ($dealResult->spec20_hour_start <= $rentalHours && $dealResult->spec20_hour_end >= $rentalHours) {
-                                    $dealArray[] = array(
-                                        'id' => $dealResult->id,
-                                        'title' => $dealResult->name,
-                                        'price' => $dealResult->price,
-                                        'free_km_h' => $dealResult->free_km_h,
-                                        'status_last_minute' => $dealResult->last_minute_status,
-                                        'last_minute_value' => $dealResult->last_minute_value,
-                                    );
+
+                                    if ($dealResult->spec20_valid_hours != "" && $dealResult->spec20_valid_hours !== null) {
+
+                                        if (in_array(date("N", $rentalStartCalculation), explode(",", $dealResult->spec20_valid_day))) {
+                                            $dealArray[] = array(
+                                                'id' => $dealResult->id,
+                                                'title' => $dealResult->name,
+                                                'price' => $dealResult->price,
+                                                'free_km_h' => $dealResult->free_km_h,
+                                                'status_last_minute' => $dealResult->last_minute_status,
+                                                'last_minute_value' => $dealResult->last_minute_value,
+                                            );
+                                        }
+
+                                    } else {
+
+                                        $dealArray[] = array(
+                                            'id' => $dealResult->id,
+                                            'title' => $dealResult->name,
+                                            'price' => $dealResult->price,
+                                            'free_km_h' => $dealResult->free_km_h,
+                                            'status_last_minute' => $dealResult->last_minute_status,
+                                            'last_minute_value' => $dealResult->last_minute_value,
+                                        );
+                                    }
                                 }
                             }
                         }
