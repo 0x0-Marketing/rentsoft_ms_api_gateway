@@ -1889,6 +1889,8 @@ class ConnectController extends AbstractController
                             $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
                         }
 
+                        break;
+
                     case 20:
 
                         $priceConfig = [];
@@ -1927,6 +1929,45 @@ class ConnectController extends AbstractController
 
                             $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
                         }
+
+                        break;
+
+                    case 21:
+
+                        $priceConfig = [];
+                        $priceConfig['calculationType'] = "per_day";
+                        $priceConfig['calculationPriceType'] = "rates";
+
+
+                        $middleOfTheDay = new \DateTime();
+                        $middleOfTheDay->setTimestamp(mktime(12, 0, 0, date("m", $rentalStartCalculation), date("d", $rentalStartCalculation), date("Y", $rentalStartCalculation)));
+
+                        $price_rate_result = $this->articleExplorer->fetch("
+                            SELECT
+                                price_rate_entry.unit_price,
+                                price_rate_entry.unit_free,
+                                price_rate_group.id,
+                                price_rate_group.name
+                            FROM price_rate_entry
+                            LEFT JOIN price_rate_group ON price_rate_group.id = price_rate_entry.price_rate_group_id
+                            LEFT JOIN article_price_rate__list ON article_price_rate__list.group_id = price_rate_group.id
+                            LEFT JOIN article ON article.id = article_price_rate__list.article_id
+                            WHERE
+                                  article_price_rate__list.article_id = " . $article_id . " AND
+                                  price_rate_group.enabled_ms_online_booking = true AND
+                                  price_rate_group.client_id = article.client_id AND
+                                  price_rate_entry.unit_from < " . $rentalDays['rentalDays'] . " AND price_rate_entry.unit_to >= " . $rentalDays['rentalDays'] . " AND
+                                  '" . $middleOfTheDay->format("Y-m-d") . "' BETWEEN price_rate_group.valid_from AND price_rate_group.valid_to AND
+                                  price_rate_group.default_price_rate = true ORDER BY price_rate_entry.unit_price " . $default_price_sort);
+
+                        if ($price_rate_result !== null && sizeof($price_rate_result) != 0) {
+
+                            $listArray[date("d.m.Y", $rentalStartCalculation)] = $price_rate_result;
+                            $priceTotal += $price_rate_result->unit_price;
+                            $kmhTotal += $price_rate_result->unit_free;
+                        }
+
+                        $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
 
                         break;
                 }
@@ -2112,6 +2153,7 @@ class ConnectController extends AbstractController
                         $priceConfig['calculationPriceType'] = "rates_fix_simple";
 
                         $priceTotal = 0;
+                        break;
 
                     case 20:
 
@@ -2223,6 +2265,7 @@ class ConnectController extends AbstractController
                 # RENTAL DAYS
                 $rental_days = 0;
                 $rental_start_calculation = $rentalStartCalculation;
+                $rental_start_calculation_original = $rentalStartCalculation;
 
                 while ($rental_start_calculation <= $rental_end) {
 
@@ -2267,6 +2310,7 @@ class ConnectController extends AbstractController
                             $priceTotal += $article->getPriceFixDay();
                             $rentalStartCalculation = strtotime("+1 day", $rentalStartCalculation);
                         }
+                        break;
 
                     case 20:
 
@@ -2366,7 +2410,7 @@ class ConnectController extends AbstractController
 
                                 $startTimeSeconds = date("H", $rentalStartCalculation);
                                 $startTimeSeconds = $startTimeSeconds * 60 * 60;
-                                $startTimeSeconds = $startTimeSeconds + date("i", $rentalStartCalculation);
+                                $startTimeSeconds = $startTimeSeconds + date("i", $rental_start_calculation_original);
 
                                 if ($startTimeSeconds >= $dealResult->spec10_start && $dealResult->spec10_max_hours >= $rentalHours && in_array(date("N", $rental_start), explode(",", $dealResult->spec10_valid_days))) {
                                     $dealArray[] = array(
@@ -2386,7 +2430,7 @@ class ConnectController extends AbstractController
 
                                     if ($dealResult->spec20_valid_days != "" && $dealResult->spec20_valid_days !== null) {
 
-                                        if (in_array(date("N", $rentalStartCalculation), explode(",", $dealResult->spec20_valid_days))) {
+                                        if (in_array(date("N", $rental_start_calculation_original), explode(",", $dealResult->spec20_valid_days))) {
                                             $dealArray[] = array(
                                                 'id' => $dealResult->id,
                                                 'title' => $dealResult->name,
