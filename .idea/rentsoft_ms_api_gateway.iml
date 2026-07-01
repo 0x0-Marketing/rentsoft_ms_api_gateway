@@ -6,6 +6,5 @@
     </content>
     <orderEntry type="inheritedJdk" />
     <orderEntry type="sourceFolder" forTests="false" />
-    <orderEntry type="module" module-name="rentsoft_ms_bluetomato_api" />
   </component>
 </module>

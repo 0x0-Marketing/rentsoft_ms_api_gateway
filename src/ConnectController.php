@@ -522,12 +522,25 @@ class ConnectController extends AbstractController
         return $model;
     }
 
-    public function getArticlesFast(array $options, $fetch_accessories = true, $fetch_images = true, $fetch_location = true, $fetch_attributes = true)
+    public function getArticlesFast(array $options, $fetch_accessories = true, $fetch_images = true, $fetch_location = true, $fetch_attributes = true, $excludedTags = array())
     {
         $sql_condition = null;
         $limit = null;
         $inner_join = null;
         $order = "ORDER BY model ASC";
+
+        if (is_array($excludedTags) && sizeof($excludedTags) > 0) {
+
+            foreach ($excludedTags as $tag) {
+                $tag = strtolower($tag);
+                $sql_condition .= " AND NOT (";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . "') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . "') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . ",%') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . ",%')";
+                $sql_condition .= ")";
+            }
+        }
 
         if (isset($options['location'])) {
             $sql_condition .= " AND location_id = '" . $options['location'] . "'";
@@ -770,12 +783,25 @@ class ConnectController extends AbstractController
         );
     }
 
-    public function getArticles(array $options, $fetch_article_groups = true, $fetch_accessories = true, $fetch_images = true, $fetch_bookings = true, $fetch_location = true, $fetch_files = true, $fetch_attributes = true)
+    public function getArticles(array $options, $fetch_article_groups = true, $fetch_accessories = true, $fetch_images = true, $fetch_bookings = true, $fetch_location = true, $fetch_files = true, $fetch_attributes = true, $excludedTags = array())
     {
         $sql_condition = null;
         $limit = null;
         $inner_join = null;
         $order = "ORDER BY model ASC";
+
+        if (is_array($excludedTags) && sizeof($excludedTags) > 0) {
+
+            foreach ($excludedTags as $tag) {
+                $tag = strtolower($tag);
+                $sql_condition .= " AND NOT (";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . "') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . "') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . ",%') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . ",%')";
+                $sql_condition .= ")";
+            }
+        }
 
         if (isset($options['location'])) {
             $sql_condition .= " AND location_id = '" . $options['location'] . "'";
