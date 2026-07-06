@@ -44,6 +44,14 @@ class ConnectController extends AbstractController
     public Explorer $articleExplorer;
     public Explorer $onlineBookingExplorer;
 
+    /**
+     * Request-lokale Memo-Caches, damit dieselbe location_id / article_group_id
+     * innerhalb eines Requests nur einmal aus der DB geladen wird.
+     * Schluessel: id (Location) bzw. id + Fetch-Flag-Signatur (Article-Group).
+     */
+    private array $locationCache = array();
+    private array $articleGroupCache = array();
+
     public function __construct($article_host, $article_username, $article_password, $article_database, $ob_host, $ob_username, $ob_password, $ob_database)
     {
         $articleStorage = new MemoryStorage();
@@ -60,6 +68,379 @@ class ConnectController extends AbstractController
 
         $this->onlineBookingExplorer = $onlineBookingExplorer;
         $this->articleExplorer = $articleExplorer;
+    }
+
+    /**
+     * Baut den gemeinsamen WHERE-Zusatz ($condition) und ggf. INNER JOIN ($inner_join)
+     * fuer getArticles / getArticlesFast / countArticles. Ersetzt die drei bisher
+     * fast identischen Bloecke. Erwartet, dass die aufrufende Query bereits
+     * "... WHERE client_id = '...'" enthaelt (der zurueckgegebene String wird angehaengt).
+     *
+     * @return array{condition: ?string, inner_join: ?string}
+     */
+    private function buildArticleConditions(array $options, array $excludedTags = array()): array
+    {
+        $sql_condition = null;
+        $inner_join = null;
+
+        if (is_array($excludedTags) && sizeof($excludedTags) > 0) {
+
+            foreach ($excludedTags as $tag) {
+                $tag = strtolower($tag);
+                $sql_condition .= " AND NOT (";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . "') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . "') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . ",%') OR ";
+                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . ",%')";
+                $sql_condition .= ")";
+            }
+        }
+
+        if (isset($options['location'])) {
+            $sql_condition .= " AND location_id = '" . $options['location'] . "'";
+        }
+
+        if (isset($options['articleGroup'])) {
+            $sql_condition .= " AND article_group_id = '" . $options['articleGroup'] . "'";
+        }
+
+        if (isset($options['oldRentsoftId'])) {
+            $sql_condition .= " AND old_rentsoft_id = '" . $options['oldRentsoftId'] . "'";
+        }
+
+        if (isset($options['articleType'])) {
+            $sql_condition .= " AND article_type = '" . $options['articleType'] . "'";
+        }
+
+        if (isset($options['manufacturer'])) {
+            $sql_condition .= " AND manufacturer = '" . $options['manufacturer'] . "'";
+        }
+
+        if (isset($options['category'])) {
+
+            $category_result = $this->articleExplorer->fetch("SELECT * FROM settings_category WHERE id = '" . $options['category'] . "'");
+
+            if (!is_null($category_result)) {
+
+                $sub_sql = "SELECT settings_category.id FROM settings_category
+                            WHERE settings_category.lft >= " . $category_result->lft . " AND settings_category.rgt <= " . $category_result->rgt . " AND settings_category.tree_root = " . $category_result->tree_root;
+                $sql_condition .= "AND article.category_id IN (" . $sub_sql . ")";
+            }
+        }
+
+        if (isset($options['tags']) && sizeof($options['tags']) > 0) {
+
+            $sql_condition .= " AND (";
+
+            foreach ($options['tags'] as $tag_group) {
+                foreach ($tag_group as $tag) {
+                    $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
+                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
+                }
+
+                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
+                $sql_condition .= " AND ";
+            }
+
+            $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
+            $sql_condition .= ")";
+        }
+
+        if (isset($options['searchQuery'])) {
+
+            $searchQuery = $options['searchQuery'];
+            $searchQuery = str_replace("'", "''", $searchQuery);
+            $searchQuery = strtolower($searchQuery);
+
+            $sql_condition .= " AND (
+                LOWER(article.article_id) LIKE '%" . $searchQuery . "%' OR
+                LOWER(name) LIKE '%" . $searchQuery . "%' OR
+                LOWER(model) LIKE '%" . $searchQuery . "%' OR
+                LOWER(model_description) LIKE '%" . $searchQuery . "%' OR
+                LOWER(manufacturer) LIKE '%" . $searchQuery . "%') ";
+        }
+
+        if (isset($options['online_booking_id'])) {
+            $inner_join = "INNER JOIN microservice_article_online_booking ON microservice_article_online_booking.article_id = article.id";
+            $sql_condition .= "AND microservice_article_online_booking.ms_online_booking_id = '" . $options['online_booking_id'] . "'";
+        }
+
+        if (isset($options['rentalDates'])) {
+
+            $start = new \DateTime();
+            $start->setTimestamp($options['rentalDates']['rentalStart']);
+
+            $end = new \DateTime();
+            $end->setTimestamp($options['rentalDates']['rentalEnd']);
+
+            $s = $start->format("Y-m-d H:i:s");
+            $e = $end->format("Y-m-d H:i:s");
+
+            // Anti-Join per NOT EXISTS (statt NOT IN): schliesst Artikel aus, die im
+            // Zeitraum vollstaendig ausgebucht sind (SUM(quantity) >= article.quantity).
+            $sql_condition .= " AND NOT EXISTS (
+                SELECT 1 FROM article_booking ab
+                WHERE ab.article_id = article.id
+                  AND (
+                    (ab.booking_start BETWEEN '" . $s . "' AND '" . $e . "') OR
+                    (ab.booking_end BETWEEN '" . $s . "' AND '" . $e . "') OR
+                    ((ab.booking_start <= '" . $s . "') AND (ab.booking_end >= '" . $e . "'))
+                  )
+                GROUP BY ab.article_id
+                HAVING SUM(ab.quantity) >= article.quantity)";
+        }
+
+        if (isset($options['quantity'])) {
+            $sql_condition .= " AND quantity >= '" . $options['quantity'] . "'";
+        }
+
+        return array('condition' => $sql_condition, 'inner_join' => $inner_join);
+    }
+
+    /**
+     * Gruppiert eine Zeilenliste nach dem Wert einer Spalte.
+     *
+     * @param iterable $rows
+     * @return array<int|string, array>  Spaltenwert => Liste der Zeilen (Reihenfolge erhalten)
+     */
+    private function groupRows($rows, string $column): array
+    {
+        $map = array();
+        foreach ($rows as $row) {
+            $map[$row->$column][] = $row;
+        }
+        return $map;
+    }
+
+    /**
+     * Uebertraegt die Kernspalten einer article-Zeile in ein Article-Model
+     * (identische Feldzuordnung wie in getArticleDetail / getArticlesFast).
+     */
+    private function mapArticleRow($result): Article
+    {
+        $model = new Article();
+        $model->setUniqueHash($result->unique_hash);
+        $model->setArticleId($result->article_id);
+        $model->setRelatedArticles($result->related_articles);
+        $model->setRelevance($result->relevance);
+        $model->setId($result->id);
+        $model->setClientId($result->client_id);
+        $model->setName($result->name);
+        $model->setNameEn($result->name_en);
+        $model->setNameFr($result->name_fr);
+        $model->setManufacturer($result->manufacturer);
+        $model->setModel($result->model);
+        $model->setModelDescription($result->model_description);
+        $model->setQuantity($result->quantity);
+        $model->setQuantityType($result->quantity_type);
+        $model->setDescriptionTeaser($result->description_teaser);
+        $model->setDescriptionTeaserEn($result->description_teaser_en);
+        $model->setDescriptionTeaserFr($result->description_teaser_fr);
+        $model->setDescription($result->description);
+        $model->setDescriptionEn($result->description_en);
+        $model->setDescriptionFr($result->description_fr);
+        $model->setOldRentsoftId($result->old_rentsoft_id);
+        $model->setDefaultPriceCalculation($result->default_price_calculation);
+        $model->setDefaultPriceCalculationType($result->default_price_calculation_type);
+        $model->setPriceFix($result->price_fix);
+        $model->setPercentagePriceValue($result->percentage_price_value);
+        $model->setPriceFixDay($result->price_fix_day);
+        $model->setPriceDeposit($result->price_deposit);
+        $model->setArticleValue1($result->article_value1);
+        $model->setArticleValue2($result->article_value2);
+        $model->setArticleValue3($result->article_value3);
+        $model->setArticleValue4($result->article_value4);
+        $model->setArticleValue5($result->article_value5);
+        $model->setArticleValue6($result->article_value6);
+        $model->setPossibleBookingType($result->possible_booking_type);
+        $model->setTags($result->tags);
+
+        return $model;
+    }
+
+    /**
+     * Batch-Hydrator: nimmt article-Zeilen (SELECT article.*) und laedt die
+     * gewuenschten Relationen mit je EINER Query (WHERE ... IN) statt pro Zeile.
+     * Ersetzt die N+1-Schleifen in getArticles / getArticlesFast / getArticleGroupDetail.
+     *
+     * $flags (bool): images, attributes, files, bookings, price_deals, location, article_groups
+     * $accessoryChild: optionale Closure(id) => Article; nur wenn Accessories geladen werden sollen.
+     *
+     * @param array $rows
+     * @return Article[]
+     */
+    private function hydrateArticles(array $rows, array $flags, ?callable $accessoryChild = null): array
+    {
+        $models = array();
+        if (sizeof($rows) === 0) {
+            return $models;
+        }
+
+        $ids = array();
+        $entries = array();
+        foreach ($rows as $row) {
+            $model = $this->mapArticleRow($row);
+            $models[] = $model;
+            $ids[] = $row->id;
+            $entries[$row->id] = array('model' => $model, 'row' => $row);
+        }
+        $idList = implode(",", $ids);
+
+        # IMAGES
+        if (!empty($flags['images'])) {
+            $map = $this->groupRows(
+                $this->articleExplorer->fetchAll("SELECT * FROM article_image WHERE article_id IN (" . $idList . ") ORDER BY id ASC"),
+                'article_id'
+            );
+            foreach ($entries as $id => $entry) {
+                $collection = new ArrayCollection();
+                foreach ($map[$id] ?? array() as $image_result) {
+                    $image = new ArticleImage();
+                    $image->setId($image_result->id);
+                    $image->setMainImage($image_result->main_image);
+                    $image->setFilesize($image_result->filesize);
+                    $image->setFilepath($image_result->filepath);
+                    $collection->add($image);
+                }
+                $entry['model']->setImages($collection);
+            }
+        }
+
+        # ATTRIBUTES
+        if (!empty($flags['attributes'])) {
+            $map = $this->groupRows(
+                $this->articleExplorer->fetchAll("SELECT * FROM article_attribute WHERE article_id IN (" . $idList . ") ORDER BY priority ASC"),
+                'article_id'
+            );
+            foreach ($entries as $id => $entry) {
+                $collection = new ArrayCollection();
+                foreach ($map[$id] ?? array() as $attribute_result) {
+                    $attribute = new ArticleAttribute();
+                    $attribute->setId($attribute_result->id);
+                    $attribute->setName($attribute_result->name);
+                    $attribute->setIcon($attribute_result->icon);
+                    $attribute->setValue($attribute_result->value);
+                    $attribute->setPriority($attribute_result->priority);
+                    $attribute->setType($attribute_result->type);
+                    $collection->add($attribute);
+                }
+                $entry['model']->setAttributes($collection);
+            }
+        }
+
+        # FILES
+        if (!empty($flags['files'])) {
+            $map = $this->groupRows(
+                $this->articleExplorer->fetchAll("SELECT * FROM article_file WHERE article_id IN (" . $idList . ")"),
+                'article_id'
+            );
+            foreach ($entries as $id => $entry) {
+                $collection = new ArrayCollection();
+                foreach ($map[$id] ?? array() as $file_result) {
+                    $file = new ArticleFiles();
+                    $file->setId($file_result->id);
+                    $file->setFilesize($file_result->filesize);
+                    $file->setFilepath($file_result->filepath);
+                    $file->setFilename($file_result->filename);
+                    $file->setEnabledMsOnlineBooking($file_result->enabled_ms_online_booking);
+                    $collection->add($file);
+                }
+                $entry['model']->setFiles($collection);
+            }
+        }
+
+        # BOOKINGS
+        if (!empty($flags['bookings'])) {
+            $map = $this->groupRows(
+                $this->articleExplorer->fetchAll("SELECT * FROM article_booking WHERE article_id IN (" . $idList . ")"),
+                'article_id'
+            );
+            foreach ($entries as $id => $entry) {
+                $collection = new ArrayCollection();
+                foreach ($map[$id] ?? array() as $booking_result) {
+                    $booking = new ArticleBooking();
+                    $booking->setBookingEnd($booking_result->booking_end);
+                    $booking->setBookingStart($booking_result->booking_start);
+                    $booking->setQuantity($booking_result->quantity);
+                    $booking->setOldRentsoftProcessId($booking_result->old_rentsoft_process_id);
+                    $collection->add($booking);
+                }
+                $entry['model']->setBookings($collection);
+            }
+        }
+
+        # PRICE DEALS
+        if (!empty($flags['price_deals'])) {
+            $map = $this->groupRows(
+                $this->articleExplorer->fetchAll("SELECT article_price_deal__list.article_id AS pd_article_id, price_deal.* FROM article_price_deal__list LEFT JOIN price_deal ON article_price_deal__list.deal_id = price_deal.id WHERE article_price_deal__list.article_id IN (" . $idList . ")"),
+                'pd_article_id'
+            );
+            foreach ($entries as $id => $entry) {
+                $collection = new ArrayCollection();
+                foreach ($map[$id] ?? array() as $deal_result) {
+                    $deal = new PriceDeal();
+                    $deal->setName($deal_result->name);
+                    $deal->setId($deal_result->id);
+                    $deal->setDealBase($deal_result->deal_base);
+                    $deal->setDealSpecification($deal_result->deal_specification);
+                    $deal->setPrice($deal_result->price);
+                    $deal->setValidStart($deal_result->valid_start);
+                    $deal->setValidEnd($deal_result->valid_end);
+                    $deal->setOldRentsoftId($deal_result->old_rentsoft_id);
+                    $deal->setEnabledMsOnlineBooking($deal_result->enabled_ms_online_booking);
+                    $deal->setFreeKmH($deal_result->free_km_h);
+                    $collection->add($deal);
+                }
+                $entry['model']->setPriceDeals($collection);
+            }
+        }
+
+        # ACCESSORIES (Parent-Zeilen gebatcht; Kind-Artikel via Closure, wie im Original)
+        if ($accessoryChild !== null) {
+            $map = $this->groupRows(
+                $this->articleExplorer->fetchAll("SELECT * FROM article_accessories WHERE article_id_parent IN (" . $idList . ")"),
+                'article_id_parent'
+            );
+            foreach ($entries as $id => $entry) {
+                $collection = new ArrayCollection();
+                foreach ($map[$id] ?? array() as $accessories_result) {
+                    $accessories = new ArticleAccessories();
+                    $accessories->setId($accessories_result->id);
+                    $accessories->setGroupName($accessories_result->group_name);
+                    $accessories->setMaxCount($accessories_result->max_count);
+                    $accessories->setRequiredMsOnlineBooking($accessories_result->required_ms_online_booking);
+                    $accessories->setTakeoverInProcess($accessories_result->takeover_in_process);
+                    $accessories->setEnabledMsOnlineBooking($accessories_result->enabled_ms_online_booking);
+                    $accessories->setEnableSingleSelectionRule($accessories_result->enable_single_selection_rule);
+                    $accessories->setArticleChild($accessoryChild($accessories_result->article_id_child));
+                    $collection->add($accessories);
+                }
+                $entry['model']->setAccessories($collection);
+            }
+        }
+
+        # LOCATION (ueber Request-Cache dedupliziert)
+        if (!empty($flags['location'])) {
+            foreach ($entries as $id => $entry) {
+                if ($entry['row']->location_id !== null) {
+                    $entry['model']->setLocation($this->getLocationDetail($entry['row']->location_id));
+                }
+            }
+        }
+
+        # ARTICLE GROUP (ueber Request-Cache dedupliziert)
+        if (!empty($flags['article_groups'])) {
+            foreach ($entries as $id => $entry) {
+                if ($entry['row']->article_group_id > 0) {
+                    $article_group = $this->getArticleGroupDetail($entry['row']->article_group_id, false, false, false, false, false, true, true, false);
+                    $entry['model']->setArticleGroup($article_group);
+                }
+            }
+        }
+
+        return $models;
     }
 
     public function getOnlineBookingByUri($uri)
@@ -171,6 +552,16 @@ class ConnectController extends AbstractController
 
     public function getArticleGroupDetail($id, $fetch_images = true, $fetch_attributes = true, $fetch_min_rental = true, $fetch_article = true, $fetch_accessories = true, $fetch_article_location = true, $fetch_article_bookings = true, $fetch_article_files = true, $fetch_article_attributes = true, $fetch_article_price_deals = false, $fetch_price_deals = false)
     {
+        // Cache-Schluessel inkl. Flag-Signatur: gleiche Flags => gleicher Inhalt.
+        $cacheKey = $id . ':'
+            . (int)$fetch_images . (int)$fetch_attributes . (int)$fetch_min_rental
+            . (int)$fetch_article . (int)$fetch_accessories . (int)$fetch_article_location
+            . (int)$fetch_article_bookings . (int)$fetch_article_files . (int)$fetch_article_attributes
+            . (int)$fetch_article_price_deals . (int)$fetch_price_deals;
+        if (isset($this->articleGroupCache[$cacheKey])) {
+            return $this->articleGroupCache[$cacheKey];
+        }
+
         $result = $this->articleExplorer->fetch("SELECT * FROM article_group WHERE id = '" . $id . "'");
 
         if ($result === null) {
@@ -280,15 +671,25 @@ class ConnectController extends AbstractController
             $model->setMinRentals($min_rental_collection);
         }
 
-        # ARTICLES
+        # ARTICLES (Batch-Hydrator statt getArticleDetail pro Artikel)
         if ($fetch_article === true) {
 
             $article_results = $this->articleExplorer->fetchAll("SELECT * FROM article WHERE article_group_id = '" . $result->id . "'");
+
+            // Entspricht getArticleDetail(id, false, false, false, bookings, location, files, attributes, price_deals):
+            // keine images / article_groups / accessories.
+            $articles = $this->hydrateArticles($article_results, array(
+                'images' => false,
+                'attributes' => $fetch_article_attributes,
+                'files' => $fetch_article_files,
+                'bookings' => $fetch_article_bookings,
+                'price_deals' => $fetch_article_price_deals,
+                'location' => $fetch_article_location,
+                'article_groups' => false,
+            ));
+
             $article_collection = new ArrayCollection();
-
-            foreach ($article_results as $article_result) {
-
-                $article = $this->getArticleDetail($article_result->id, false, false, false, $fetch_article_bookings, $fetch_article_location, $fetch_article_files, $fetch_article_attributes, $fetch_article_price_deals);
+            foreach ($articles as $article) {
                 $article_collection->add($article);
             }
 
@@ -319,6 +720,8 @@ class ConnectController extends AbstractController
 
             $model->setAccessories($accessories_collection);
         }
+
+        $this->articleGroupCache[$cacheKey] = $model;
 
         return $model;
     }
@@ -524,89 +927,12 @@ class ConnectController extends AbstractController
 
     public function getArticlesFast(array $options, $fetch_accessories = true, $fetch_images = true, $fetch_location = true, $fetch_attributes = true, $excludedTags = array())
     {
-        $sql_condition = null;
         $limit = null;
-        $inner_join = null;
         $order = "ORDER BY model ASC";
 
-        if (is_array($excludedTags) && sizeof($excludedTags) > 0) {
-
-            foreach ($excludedTags as $tag) {
-                $tag = strtolower($tag);
-                $sql_condition .= " AND NOT (";
-                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . "') OR ";
-                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . "') OR ";
-                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . ",%') OR ";
-                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . ",%')";
-                $sql_condition .= ")";
-            }
-        }
-
-        if (isset($options['location'])) {
-            $sql_condition .= " AND location_id = '" . $options['location'] . "'";
-        }
-
-        if (isset($options['articleGroup'])) {
-            $sql_condition .= " AND article_group_id = '" . $options['articleGroup'] . "'";
-        }
-
-        if (isset($options['oldRentsoftId'])) {
-            $sql_condition .= " AND old_rentsoft_id = '" . $options['oldRentsoftId'] . "'";
-        }
-
-        if (isset($options['articleType'])) {
-            $sql_condition .= " AND article_type = '" . $options['articleType'] . "'";
-        }
-
-        if (isset($options['manufacturer'])) {
-            $sql_condition .= " AND manufacturer = '" . $options['manufacturer'] . "'";
-        }
-
-        if (isset($options['category'])) {
-
-            $category_result = $this->articleExplorer->fetch("SELECT * FROM settings_category WHERE id = '" . $options['category'] . "'");
-
-            if (!is_null($category_result)) {
-
-                $sub_sql = "SELECT settings_category.id FROM settings_category 
-                            WHERE settings_category.lft >= " . $category_result->lft . " AND settings_category.rgt <= " . $category_result->rgt . " AND settings_category.tree_root = " . $category_result->tree_root;
-                $sql_condition .= "AND article.category_id IN (" . $sub_sql . ")";
-            }
-        }
-
-        if (isset($options['tags']) && sizeof($options['tags']) > 0) {
-
-            $sql_condition .= " AND (";
-
-            foreach ($options['tags'] as $tag_group) {
-                foreach ($tag_group as $tag) {
-                    $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
-                }
-
-                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
-                $sql_condition .= " AND ";
-            }
-
-            $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
-            $sql_condition .= ")";
-        }
-
-        if (isset($options['searchQuery'])) {
-
-            $searchQuery = $options['searchQuery'];
-            $searchQuery = str_replace("'", "''", $searchQuery);
-            $searchQuery = strtolower($searchQuery);
-
-            $sql_condition .= " AND (
-                LOWER(article.article_id) LIKE '%" . $searchQuery . "%' OR
-                LOWER(name) LIKE '%" . $searchQuery . "%' OR
-                LOWER(model) LIKE '%" . $searchQuery . "%' OR
-                LOWER(model_description) LIKE '%" . $searchQuery . "%' OR
-                LOWER(manufacturer) LIKE '%" . $searchQuery . "%') ";
-        }
+        $built = $this->buildArticleConditions($options, $excludedTags);
+        $sql_condition = $built['condition'];
+        $inner_join = $built['inner_join'];
 
         if (isset($options['page'])) {
 
@@ -631,153 +957,36 @@ class ConnectController extends AbstractController
             $order = substr($order, 0, -1);
         }
 
-        if (isset($options['online_booking_id'])) {
-            $inner_join = "INNER JOIN microservice_article_online_booking ON microservice_article_online_booking.article_id = article.id";
-            $sql_condition .= "AND microservice_article_online_booking.ms_online_booking_id = '" . $options['online_booking_id'] . "'";
+        $base_from = "FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition;
+
+        // Eine Ergebnis-Query (GROUP BY article.id => distinkte Artikel, sicher fuer Batch-Hydration)
+        $results = $this->articleExplorer->fetchAll("SELECT article.* " . $base_from . " GROUP BY article.id " . $order . $limit);
+
+        // Gesamtzahl per COUNT statt zweiter Vollabfrage
+        $count_row = $this->articleExplorer->fetch("SELECT COUNT(*) AS cnt FROM (SELECT article.id " . $base_from . " GROUP BY article.id) x");
+        $total_results = (int)($count_row->cnt ?? 0);
+
+        $accessory_child = null;
+        if ($fetch_accessories === true) {
+            $accessory_child = function ($child_id) {
+                return $this->getArticleDetail($child_id, false);
+            };
         }
 
-        if (isset($options['rentalDates'])) {
-
-            $start = new \DateTime();
-            $start->setTimestamp($options['rentalDates']['rentalStart']);
-
-            $end = new \DateTime();
-            $end->setTimestamp($options['rentalDates']['rentalEnd']);
-
-            $sub_sql = "SELECT article.id FROM article_booking INNER JOIN article ON article.id = article_booking.article_id WHERE
-                (
-                    (booking_start BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
-                    (booking_end BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
-                    (
-                        (booking_start <= '" . $start->format("Y-m-d H:i:s") . "' ) AND
-                        (booking_end >=  '" . $end->format("Y-m-d H:i:s") . "')
-                    )
-                )
-                GROUP BY article.id HAVING SUM(article_booking.quantity) >= article.quantity";
-
-            $sql_condition .= "AND article.id NOT IN (" . $sub_sql . ")";
-        }
-
-        if (isset($options['quantity'])) {
-            $sql_condition .= " AND quantity >= '" . $options['quantity'] . "'";
-        }
-
-        $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . $order . $limit);
-        $results_all = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . $order);
+        $models = $this->hydrateArticles($results, array(
+            'images' => $fetch_images,
+            'attributes' => $fetch_attributes,
+            'location' => $fetch_location,
+        ), $accessory_child);
 
         $collection = new ArrayCollection();
-        foreach ($results as $result) {
-
-            $model = new Article();
-            $model->setArticleId($result->article_id);
-            $model->setUniqueHash($result->unique_hash);
-            $model->setRelevance($result->relevance);
-            $model->setRelatedArticles($result->related_articles);
-            $model->setId($result->id);
-            $model->setClientId($result->client_id);
-            $model->setName($result->name);
-            $model->setNameEn($result->name_en);
-            $model->setNameFr($result->name_fr);
-            $model->setManufacturer($result->manufacturer);
-            $model->setModel($result->model);
-            $model->setModelDescription($result->model_description);
-            $model->setQuantity($result->quantity);
-            $model->setQuantityType($result->quantity_type);
-            $model->setDescriptionTeaser($result->description_teaser);
-            $model->setDescriptionTeaserEn($result->description_teaser_en);
-            $model->setDescriptionTeaserFr($result->description_teaser_fr);
-            $model->setDescription($result->description);
-            $model->setDescriptionEn($result->description_en);
-            $model->setDescriptionFr($result->description_fr);
-            $model->setOldRentsoftId($result->old_rentsoft_id);
-            $model->setDefaultPriceCalculation($result->default_price_calculation);
-            $model->setDefaultPriceCalculationType($result->default_price_calculation_type);
-            $model->setPriceFix($result->price_fix);
-            $model->setPriceFixDay($result->price_fix_day);
-            $model->setPercentagePriceValue($result->percentage_price_value);
-            $model->setPriceDeposit($result->price_deposit);
-            $model->setArticleValue1($result->article_value1);
-            $model->setArticleValue2($result->article_value2);
-            $model->setArticleValue3($result->article_value3);
-            $model->setArticleValue4($result->article_value4);
-            $model->setArticleValue5($result->article_value5);
-            $model->setArticleValue6($result->article_value6);
-            $model->setPossibleBookingType($result->possible_booking_type);
-            $model->setTags($result->tags);
-
-            if ($fetch_images === true) {
-
-                $image_results = $this->articleExplorer->fetchAll("SELECT * FROM article_image WHERE article_id = '" . $result->id . "' ORDER BY id ASC ");
-                $image_collection = new ArrayCollection();
-
-                foreach ($image_results as $image_result) {
-                    $image = new ArticleImage();
-                    $image->setId($image_result->id);
-                    $image->setMainImage($image_result->main_image);
-                    $image->setFilesize($image_result->filesize);
-                    $image->setFilepath($image_result->filepath);
-
-                    $image_collection->add($image);
-                }
-
-                $model->setImages($image_collection);
-            }
-
-            if ($fetch_attributes === true) {
-                $attribute_results = $this->articleExplorer->fetchAll("SELECT * FROM article_attribute WHERE article_id = '" . $result->id . "' ORDER BY priority ASC");
-                $attribute_collection = new ArrayCollection();
-
-                foreach ($attribute_results as $attribute_result) {
-                    $attribute = new ArticleAttribute();
-                    $attribute->setId($attribute_result->id);
-                    $attribute->setName($attribute_result->name);
-                    $attribute->setIcon($attribute_result->icon);
-                    $attribute->setValue($attribute_result->value);
-                    $attribute->setPriority($attribute_result->priority);
-                    $attribute->setType($attribute_result->type);
-
-                    $attribute_collection->add($attribute);
-                }
-
-                $model->setAttributes($attribute_collection);
-            }
-
-            if ($fetch_accessories === true) {
-                $accessories_results = $this->articleExplorer->fetchAll("SELECT * FROM article_accessories WHERE article_id_parent = " . $result->id);
-                $accessories_collection = new ArrayCollection();
-
-                foreach ($accessories_results as $accessories_result) {
-                    $accessories = new ArticleAccessories();
-                    $accessories->setId($accessories_result->id);
-                    $accessories->setGroupName($accessories_result->group_name);
-                    $accessories->setMaxCount($accessories_result->max_count);
-                    $accessories->setRequiredMsOnlineBooking($accessories_result->required_ms_online_booking);
-                    $accessories->setTakeoverInProcess($accessories_result->takeover_in_process);
-                    $accessories->setEnabledMsOnlineBooking($accessories_result->enabled_ms_online_booking);
-                    $accessories->setEnableSingleSelectionRule($accessories_result->enable_single_selection_rule);
-
-                    $article_child = $this->getArticleDetail($accessories_result->article_id_child, false);
-                    $accessories->setArticleChild($article_child);
-
-                    $accessories_collection->add($accessories);
-                }
-
-                $model->setAccessories($accessories_collection);
-            }
-
-            if ($fetch_location === true) {
-                if ($result->location_id !== null && $fetch_location === true) {
-                    $location = $this->getLocationDetail($result->location_id);
-                    $model->setLocation($location);
-                }
-            }
-
+        foreach ($models as $model) {
             $collection->add($model);
         }
 
         return array(
             'results' => $collection,
-            'total_results' => sizeof($results_all),
+            'total_results' => $total_results,
             'page' => $options['page'],
             'limit' => $options['limit']
         );
@@ -785,89 +994,12 @@ class ConnectController extends AbstractController
 
     public function getArticles(array $options, $fetch_article_groups = true, $fetch_accessories = true, $fetch_images = true, $fetch_bookings = true, $fetch_location = true, $fetch_files = true, $fetch_attributes = true, $excludedTags = array())
     {
-        $sql_condition = null;
         $limit = null;
-        $inner_join = null;
         $order = "ORDER BY model ASC";
 
-        if (is_array($excludedTags) && sizeof($excludedTags) > 0) {
-
-            foreach ($excludedTags as $tag) {
-                $tag = strtolower($tag);
-                $sql_condition .= " AND NOT (";
-                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . "') OR ";
-                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . "') OR ";
-                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '%," . $tag . ",%') OR ";
-                $sql_condition .= "(LOWER(COALESCE(article.tags, '')) LIKE '" . $tag . ",%')";
-                $sql_condition .= ")";
-            }
-        }
-
-        if (isset($options['location'])) {
-            $sql_condition .= " AND location_id = '" . $options['location'] . "'";
-        }
-
-        if (isset($options['articleGroup'])) {
-            $sql_condition .= " AND article_group_id = '" . $options['articleGroup'] . "'";
-        }
-
-        if (isset($options['oldRentsoftId'])) {
-            $sql_condition .= " AND old_rentsoft_id = '" . $options['oldRentsoftId'] . "'";
-        }
-
-        if (isset($options['articleType'])) {
-            $sql_condition .= " AND article_type = '" . $options['articleType'] . "'";
-        }
-
-        if (isset($options['manufacturer'])) {
-            $sql_condition .= " AND manufacturer = '" . $options['manufacturer'] . "'";
-        }
-
-        if (isset($options['category'])) {
-
-            $category_result = $this->articleExplorer->fetch("SELECT * FROM settings_category WHERE id = '" . $options['category'] . "'");
-
-            if (!is_null($category_result)) {
-
-                $sub_sql = "SELECT settings_category.id FROM settings_category 
-                            WHERE settings_category.lft >= " . $category_result->lft . " AND settings_category.rgt <= " . $category_result->rgt . " AND settings_category.tree_root = " . $category_result->tree_root;
-                $sql_condition .= "AND article.category_id IN (" . $sub_sql . ")";
-            }
-        }
-
-        if (isset($options['tags']) && sizeof($options['tags']) > 0) {
-
-            $sql_condition .= " AND (";
-
-            foreach ($options['tags'] as $tag_group) {
-                foreach ($tag_group as $tag) {
-                    $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
-                }
-
-                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
-                $sql_condition .= " AND ";
-            }
-
-            $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
-            $sql_condition .= ")";
-        }
-
-        if (isset($options['searchQuery'])) {
-
-            $searchQuery = $options['searchQuery'];
-            $searchQuery = str_replace("'", "''", $searchQuery);
-            $searchQuery = strtolower($searchQuery);
-
-            $sql_condition .= " AND (
-                LOWER(article.article_id) LIKE '%" . $searchQuery . "%' OR
-                LOWER(name) LIKE '%" . $searchQuery . "%' OR
-                LOWER(model) LIKE '%" . $searchQuery . "%' OR
-                LOWER(model_description) LIKE '%" . $searchQuery . "%' OR
-                LOWER(manufacturer) LIKE '%" . $searchQuery . "%') ";
-        }
+        $built = $this->buildArticleConditions($options, $excludedTags);
+        $sql_condition = $built['condition'];
+        $inner_join = $built['inner_join'];
 
         if (isset($options['page'])) {
 
@@ -892,38 +1024,28 @@ class ConnectController extends AbstractController
             $order = substr($order, 0, -1);
         }
 
-        if (isset($options['online_booking_id'])) {
-            $inner_join = "INNER JOIN microservice_article_online_booking ON microservice_article_online_booking.article_id = article.id";
-            $sql_condition .= "AND microservice_article_online_booking.ms_online_booking_id = '" . $options['online_booking_id'] . "'";
-        }
-
-        if (isset($options['rentalDates'])) {
-
-            $start = new \DateTime();
-            $start->setTimestamp($options['rentalDates']['rentalStart']);
-
-            $end = new \DateTime();
-            $end->setTimestamp($options['rentalDates']['rentalEnd']);
-
-            $sub_sql = "SELECT article.id FROM article_booking INNER JOIN article ON article.id = article_booking.article_id WHERE
-                (
-                    (booking_start BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
-                    (booking_end BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
-                    (
-                        (booking_start <= '" . $start->format("Y-m-d H:i:s") . "' ) AND
-                        (booking_end >=  '" . $end->format("Y-m-d H:i:s") . "')
-                    )
-                )
-                GROUP BY article.id HAVING SUM(article_booking.quantity) >= article.quantity";
-
-            $sql_condition .= "AND article.id NOT IN (" . $sub_sql . ")";
-        }
-
         $results = $this->articleExplorer->fetchAll("SELECT article.* FROM article " . $inner_join . " WHERE client_id = '" . $options['client_id'] . "'" . $sql_condition . " GROUP BY article.id " . $order . $limit);
 
+        // Accessory-Kind exakt wie in getArticleDetail (images-only Kind)
+        $accessory_child = null;
+        if ($fetch_accessories === true) {
+            $accessory_child = function ($child_id) {
+                return $this->getArticleDetail($child_id, false, false, true, false, false, false, false, false);
+            };
+        }
+
+        $models = $this->hydrateArticles($results, array(
+            'article_groups' => $fetch_article_groups,
+            'images' => $fetch_images,
+            'bookings' => $fetch_bookings,
+            'location' => $fetch_location,
+            'files' => $fetch_files,
+            'attributes' => $fetch_attributes,
+            'price_deals' => true,
+        ), $accessory_child);
+
         $collection = new ArrayCollection();
-        foreach ($results as $result) {
-            $article = $this->getArticleDetail($result->id, $fetch_article_groups, $fetch_accessories, $fetch_images, $fetch_bookings, $fetch_location, $fetch_files, $fetch_attributes);
+        foreach ($models as $article) {
             $collection->add($article);
         }
 
@@ -932,111 +1054,9 @@ class ConnectController extends AbstractController
 
     public function countArticles(array $options): int
     {
-        $sql_condition = null;
-        $inner_join = null;
-
-        if (isset($options['location'])) {
-            $sql_condition .= " AND location_id = '" . $options['location'] . "'";
-        }
-
-        if (isset($options['articleGroup'])) {
-            $sql_condition .= " AND article_group_id = '" . $options['articleGroup'] . "'";
-        }
-
-        if (isset($options['oldRentsoftId'])) {
-            $sql_condition .= " AND old_rentsoft_id = '" . $options['oldRentsoftId'] . "'";
-        }
-
-        if (isset($options['articleType'])) {
-            $sql_condition .= " AND article_type = '" . $options['articleType'] . "'";
-        }
-
-        if (isset($options['manufacturer'])) {
-            $sql_condition .= " AND manufacturer = '" . $options['manufacturer'] . "'";
-        }
-
-        if (isset($options['category'])) {
-
-            $category_result = $this->articleExplorer->fetch(
-                "SELECT * FROM settings_category WHERE id = '" . $options['category'] . "'"
-            );
-
-            if (!is_null($category_result)) {
-                $sub_sql = "SELECT settings_category.id FROM settings_category 
-                        WHERE settings_category.lft >= " . $category_result->lft . " 
-                          AND settings_category.rgt <= " . $category_result->rgt . " 
-                          AND settings_category.tree_root = " . $category_result->tree_root;
-
-                $sql_condition .= " AND article.category_id IN (" . $sub_sql . ")";
-            }
-        }
-
-        if (isset($options['tags']) && sizeof($options['tags']) > 0) {
-
-            $sql_condition .= " AND (";
-
-            foreach ($options['tags'] as $tag_group) {
-                foreach ($tag_group as $tag) {
-                    $sql_condition .= "((LOWER(article.tags) LIKE '" . strtolower($tag) . "') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . "') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '%," . strtolower($tag) . ",%') OR ";
-                    $sql_condition .= "(LOWER(article.tags) LIKE '" . strtolower($tag) . ",%')) OR ";
-                }
-
-                $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 4);
-                $sql_condition .= " AND ";
-            }
-
-            $sql_condition = substr($sql_condition, 0, strlen($sql_condition) - 5);
-            $sql_condition .= ")";
-        }
-
-        if (isset($options['searchQuery'])) {
-
-            $searchQuery = $options['searchQuery'];
-            $searchQuery = str_replace("'", "''", $searchQuery);
-            $searchQuery = strtolower($searchQuery);
-
-            $sql_condition .= " AND (
-            LOWER(article.article_id) LIKE '%" . $searchQuery . "%' OR
-            LOWER(name) LIKE '%" . $searchQuery . "%' OR
-            LOWER(model) LIKE '%" . $searchQuery . "%' OR
-            LOWER(model_description) LIKE '%" . $searchQuery . "%' OR
-            LOWER(manufacturer) LIKE '%" . $searchQuery . "%'
-        ) ";
-        }
-
-        if (isset($options['online_booking_id'])) {
-            $inner_join = "INNER JOIN microservice_article_online_booking 
-                       ON microservice_article_online_booking.article_id = article.id";
-            $sql_condition .= " AND microservice_article_online_booking.ms_online_booking_id = '" . $options['online_booking_id'] . "'";
-        }
-
-        if (isset($options['rentalDates'])) {
-
-            $start = new \DateTime();
-            $start->setTimestamp($options['rentalDates']['rentalStart']);
-
-            $end = new \DateTime();
-            $end->setTimestamp($options['rentalDates']['rentalEnd']);
-
-            $sub_sql = "SELECT article.id 
-                    FROM article_booking 
-                    INNER JOIN article ON article.id = article_booking.article_id 
-                    WHERE
-                        (
-                            (booking_start BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
-                            (booking_end BETWEEN '" . $start->format("Y-m-d H:i:s") . "' AND '" . $end->format("Y-m-d H:i:s") . "') OR
-                            (
-                                (booking_start <= '" . $start->format("Y-m-d H:i:s") . "' ) AND
-                                (booking_end >=  '" . $end->format("Y-m-d H:i:s") . "')
-                            )
-                        )
-                    GROUP BY article.id 
-                    HAVING SUM(article_booking.quantity) >= article.quantity";
-
-            $sql_condition .= " AND article.id NOT IN (" . $sub_sql . ")";
-        }
+        $built = $this->buildArticleConditions($options);
+        $sql_condition = $built['condition'];
+        $inner_join = $built['inner_join'];
 
         // Wichtig: über Subquery zählen, damit GROUP BY / JOIN korrekt behandelt werden
         $countSql = "
@@ -1187,6 +1207,10 @@ class ConnectController extends AbstractController
 
     public function getLocationDetail($id)
     {
+        if (isset($this->locationCache[$id])) {
+            return $this->locationCache[$id];
+        }
+
         $result = $this->articleExplorer->fetch("SELECT * FROM settings_location WHERE id = '" . $id . "'");
 
         if ($result === null) {
@@ -1220,6 +1244,8 @@ class ConnectController extends AbstractController
         }
 
         $model->setImages($image_collection);
+
+        $this->locationCache[$id] = $model;
 
         return $model;
     }
